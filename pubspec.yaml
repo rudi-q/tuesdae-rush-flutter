@@ -1,5 +1,5 @@
 name: tuesdae_rush
-description: "A new Flutter project."
+description: "Tuesdae Rush - Traffic Control Game"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -14,12 +14,20 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
 
   uses-material-design: true
   assets:
       - assets/images/grass_texture.jpg
+      - assets/images/tuesdae_rush_cover.jpg
+
+flutter_launcher_icons:
+  windows:
+    generate: true
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
 

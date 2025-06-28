@@ -14,7 +14,7 @@ class TuesdaeRushApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tuesdae Rush',
+      title: 'Tuesdae Rush - Traffic Control Game',
       theme: ThemeData(
         primarySwatch: Colors.green,
         fontFamily: 'Segoe UI',
@@ -449,9 +449,13 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         case 'Space':
         case 'Escape':
           if (!gameState.gameStarted) {
-            gameState.startGame();
+            setState(() {
+              gameState.startGame();
+            });
           } else {
-            gameState.togglePause();
+            setState(() {
+              gameState.togglePause();
+            });
           }
           break;
         case 'r':
@@ -481,113 +485,161 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               ],
             ),
           ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Game Title
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                // Game Cover Image
                 Container(
-                  padding: EdgeInsets.all(20),
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.65, // Max 65% of screen height
+                    maxWidth: MediaQuery.of(context).size.width * 0.9,    // Max 90% of screen width
+                  ),
                   decoration: BoxDecoration(
-                    color: Color(0xFF77ACA2).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 15,
+                        offset: Offset(0, 8),
                       ),
                     ],
                   ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/images/tuesdae_rush_cover.jpg',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback to text title if image fails to load
+                        return Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.65,
+                            maxWidth: MediaQuery.of(context).size.width * 0.9,
+                          ),
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF77ACA2).withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Tuesdae Rush',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(2, 2),
+                                      blurRadius: 5,
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Just another Tuesdae traffic scene',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 20),
+                
+                // Compact Instructions Section (max 20% screen height)
+                Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.2, // Max 20% of screen height
+                  ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Tuesdae Rush',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(2, 2),
-                              blurRadius: 5,
-                              color: Colors.black.withValues(alpha: 0.7),
+                      // Start Instructions
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.play_circle_outline,
+                              color: Color(0xFF4CAF50),
+                              size: 24,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Press ESC or tap to start!',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Just another Tuesdae traffic scene',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 16,
-                          fontStyle: FontStyle.italic,
+                      
+                      SizedBox(height: 12),
+                      
+                      // Quick controls hint
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF77ACA2).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '🎮 Arrow Keys: Traffic Lights • 1-5: Difficulty',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 12,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              'Control traffic flow • Prevent crashes and jams!',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 11,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                
-                SizedBox(height: 50),
-                
-                // Start Instructions
-                Container(
-                  padding: EdgeInsets.all(25),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.play_circle_outline,
-                        color: Color(0xFF4CAF50),
-                        size: 48,
-                      ),
-                      SizedBox(height: 15),
-                      Text(
-                        'Press ESC or tap to start!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Control traffic lights to manage car flow\nArrow keys or tap lights to toggle them\nPrevent crashes and traffic jams!',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 16,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
                 ),
-                
-                SizedBox(height: 30),
-                
-                // Quick controls hint
-                Container(
-                  padding: EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF77ACA2).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '🎮 Arrow Keys: Traffic Lights • 1-5: Difficulty • ESC: Start/Pause',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
