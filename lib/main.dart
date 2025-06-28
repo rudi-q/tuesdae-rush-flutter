@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'audio_manager.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
 
@@ -39,6 +40,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
   late AnimationController _gameLoopController;
   late GameState gameState;
+  late AudioManager audioManager;
   bool isDarkMode = true;
   bool isFullscreen = false;
 
@@ -47,6 +49,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     super.initState();
 
     gameState = GameState();
+    audioManager = AudioManager();
 
     // 60 FPS game loop
     _gameLoopController = AnimationController(
@@ -56,8 +59,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
     _gameLoopController.addListener(_gameLoop);
 
-    // Initialize game
+    // Initialize game and audio
     gameState.initialize();
+    audioManager.initialize();
   }
 
   void _gameLoop() {
@@ -423,15 +427,19 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       switch (event.logicalKey.keyLabel) {
         case 'Arrow Up':
           gameState.toggleTrafficLight(Direction.north);
+          audioManager.playTrafficLightSwitch();
           break;
         case 'Arrow Down':
           gameState.toggleTrafficLight(Direction.south);
+          audioManager.playTrafficLightSwitch();
           break;
         case 'Arrow Right':
           gameState.toggleTrafficLight(Direction.east);
+          audioManager.playTrafficLightSwitch();
           break;
         case 'Arrow Left':
           gameState.toggleTrafficLight(Direction.west);
+          audioManager.playTrafficLightSwitch();
           break;
         case '1':
           gameState.changeDifficulty(Difficulty.easy);
@@ -654,6 +662,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   @override
   void dispose() {
     _gameLoopController.dispose();
+    audioManager.dispose();
     super.dispose();
   }
 }
@@ -709,7 +718,10 @@ class GameCanvasState extends State<GameCanvas> {
             width: touchArea.bounds.width,
             height: touchArea.bounds.height,
             child: GestureDetector(
-              onTap: () => widget.gameState.toggleTrafficLight(touchArea.direction),
+              onTap: () {
+                widget.gameState.toggleTrafficLight(touchArea.direction);
+                AudioManager().playTrafficLightSwitch();
+              },
               child: Container(
                 color: Colors.transparent,
               ),

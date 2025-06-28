@@ -10,6 +10,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +24,7 @@ flutter:
   assets:
       - assets/images/grass_texture.jpg
       - assets/images/tuesdae_rush_cover.jpg
+      - assets/audio/
 
 flutter_launcher_icons:
   windows:

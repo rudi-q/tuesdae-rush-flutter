@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'audio_manager.dart';
+
 enum Direction { north, south, east, west }
 enum LightState { red, green }
 enum CarType { regular, ambulance, police, tractor, schoolBus, impatient }
@@ -30,6 +32,10 @@ class GameState {
   bool isGameOver = false;
   bool gameStarted = false;
   String gameOverReason = '';
+  
+  // Audio tracking
+  bool _ambulanceSirenPlaying = false;
+  bool _policeSirenPlaying = false;
 
   // Spawning
   int carSpawnTimer = 0;
@@ -162,6 +168,9 @@ class GameState {
           score += points;
           totalCarsPassed++;
           
+          // Play car passed sound
+          AudioManager().playCarPassed();
+          
           // Add score popup
           scorePopups.add(ScorePopup(
             x: cars[i].x,
@@ -202,6 +211,9 @@ class GameState {
 
     // Check objectives
     _checkObjectives();
+    
+    // Update sirens
+    _updateSirens();
 
     // Check game over conditions
     _checkGameOverConditions();
@@ -383,6 +395,9 @@ class GameState {
 
     crashEffects.add(CrashEffect(x: crashX, y: crashY, timer: 60));
     score = math.max(0, score - 5);
+    
+    // Play crash sound
+    AudioManager().playCrash();
 
     scorePopups.add(ScorePopup(
       x: crashX,
@@ -438,6 +453,29 @@ class GameState {
       ));
     }
   }
+  
+  void _updateSirens() {
+    bool hasAmbulance = cars.any((car) => car.type == CarType.ambulance && !car.crashed);
+    bool hasPolice = cars.any((car) => car.type == CarType.police && !car.crashed);
+    
+    // Manage ambulance siren
+    if (hasAmbulance && !_ambulanceSirenPlaying) {
+      AudioManager().playAmbulanceSiren();
+      _ambulanceSirenPlaying = true;
+    } else if (!hasAmbulance && _ambulanceSirenPlaying) {
+      AudioManager().stopSirens();
+      _ambulanceSirenPlaying = false;
+    }
+    
+    // Manage police siren (only if no ambulance)
+    if (hasPolice && !hasAmbulance && !_policeSirenPlaying) {
+      AudioManager().playPoliceSiren();
+      _policeSirenPlaying = true;
+    } else if ((!hasPolice || hasAmbulance) && _policeSirenPlaying) {
+      AudioManager().stopSirens();
+      _policeSirenPlaying = false;
+    }
+  }
 
   void _checkObjectives() {
     int successRate = getSuccessRate();
@@ -482,6 +520,10 @@ class GameState {
 
   void _awardObjectiveBonus(String objectiveName, int bonus) {
     score += bonus;
+    
+    // Play special achievement sound
+    AudioManager().playPerfectFlow();
+    
     scorePopups.add(ScorePopup(
       x: gameWidth / 2,
       y: gameHeight / 2 - 50,
@@ -548,6 +590,11 @@ class GameState {
     isGameOver = false;
     gameStarted = true;  // Keep game running after restart
     gameOverReason = '';
+    
+    // Stop all sirens
+    AudioManager().stopAllSounds();
+    _ambulanceSirenPlaying = false;
+    _policeSirenPlaying = false;
     
     objectives = {
       'pass_20_cars': false,
