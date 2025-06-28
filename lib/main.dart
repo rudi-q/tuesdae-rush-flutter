@@ -59,7 +59,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   void _gameLoop() {
-    if (mounted && !gameState.isPaused && !gameState.isGameOver) {
+    if (mounted && !gameState.isPaused && !gameState.isGameOver && gameState.gameStarted) {
       setState(() {
         gameState.update();
       });
@@ -99,6 +99,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
             // Pause Overlay
             if (gameState.isPaused) _buildPauseOverlay(),
+
+            // Start Screen Overlay
+            if (!gameState.gameStarted) _buildStartScreen(),
           ],
         ),
       ),
@@ -445,20 +448,151 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           break;
         case 'Space':
         case 'Escape':
-          setState(() {
+          if (!gameState.gameStarted) {
+            gameState.startGame();
+          } else {
             gameState.togglePause();
-          });
+          }
           break;
         case 'r':
         case 'R':
           if (gameState.isGameOver) {
-            setState(() {
-              gameState.restart();
-            });
+            gameState.restart();
           }
           break;
       }
     }
+  }
+
+  Widget _buildStartScreen() {
+    return Positioned.fill(
+      child: GestureDetector(
+        onTap: () {
+          gameState.startGame();
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF031926).withValues(alpha: 0.9),
+                Color(0xFF1E3264).withValues(alpha: 0.9),
+              ],
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Game Title
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF77ACA2).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Tuesdae Rush',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(2, 2),
+                              blurRadius: 5,
+                              color: Colors.black.withValues(alpha: 0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Just another Tuesdae traffic scene',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 50),
+                
+                // Start Instructions
+                Container(
+                  padding: EdgeInsets.all(25),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.play_circle_outline,
+                        color: Color(0xFF4CAF50),
+                        size: 48,
+                      ),
+                      SizedBox(height: 15),
+                      Text(
+                        'Press ESC or tap to start!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'Control traffic lights to manage car flow\nArrow keys or tap lights to toggle them\nPrevent crashes and traffic jams!',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 30),
+                
+                // Quick controls hint
+                Container(
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF77ACA2).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '🎮 Arrow Keys: Traffic Lights • 1-5: Difficulty • ESC: Start/Pause',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override

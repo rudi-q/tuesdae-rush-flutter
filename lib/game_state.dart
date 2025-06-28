@@ -28,6 +28,7 @@ class GameState {
   int totalCarsCrashed = 0;
   bool isPaused = false;
   bool isGameOver = false;
+  bool gameStarted = false;
   String gameOverReason = '';
 
   // Spawning
@@ -139,7 +140,7 @@ class GameState {
   }
 
   void update() {
-    if (isPaused || isGameOver) return;
+    if (isPaused || isGameOver || !gameStarted) return;
 
     // Update cars
     for (int i = cars.length - 1; i >= 0; i--) {
@@ -545,6 +546,7 @@ class GameState {
     nextSpawnTime = 0;
     isPaused = false;
     isGameOver = false;
+    gameStarted = false;
     gameOverReason = '';
     
     objectives = {
@@ -566,6 +568,10 @@ class GameState {
     };
     
     initialize();
+  }
+
+  void startGame() {
+    gameStarted = true;
   }
 
   int getWaitingCarsCount() {
