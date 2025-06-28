@@ -70,10 +70,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: isDarkMode ? Color(0xFF031926) : Color(0xFF77ACA2),
-      body: KeyboardListener(
+      body: RawKeyboardListener(
         focusNode: FocusNode(),
         autofocus: true,
-        onKeyEvent: _handleKeyPress,
+        onKey: _handleKeyPress,
         child: Stack(
           children: [
             // Game Canvas
@@ -279,7 +279,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               style: TextStyle(color: Color(0xFFFFC107), fontSize: 14, fontWeight: FontWeight.bold),
             ),
             Text('Arrow Keys: Traffic Lights', style: TextStyle(color: Colors.white, fontSize: 10)),
-            Text('Space Bar: Pause/Resume', style: TextStyle(color: Colors.white, fontSize: 10)),
+            Text('Space bar: Pause/Resume', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('1-5 Keys: Change Difficulty', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('R Key: Restart (Game Over)', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('Tap: Toggle Lights', style: TextStyle(color: Colors.white, fontSize: 10)),
@@ -413,8 +413,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
-  void _handleKeyPress(KeyEvent event) {
-    if (event is KeyDownEvent) {
+  void _handleKeyPress(RawKeyEvent event) {
+    if (event is RawKeyDownEvent) {
       switch (event.logicalKey.keyLabel) {
         case 'Arrow Up':
           gameState.toggleTrafficLight(Direction.north);
