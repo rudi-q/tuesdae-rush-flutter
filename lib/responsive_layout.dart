@@ -42,43 +42,92 @@ class ResponsiveLayout {
     return minDimension < 600;
   }
 
-  /// Get appropriate font sizes for different screen types
+  /// Get appropriate font sizes for different screen types with proportional scaling
   Map<String, double> getFontSizes(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final deviceType = getDeviceType(context);
     final isCompact = isCompactScreen(context);
     
+    // Use the smaller dimension as base for consistent scaling
+    final baseDimension = size.width < size.height ? size.width : size.height;
+    
+    // Calculate scale factor based on device type and screen size
+    double scaleFactor;
     switch (deviceType) {
       case DeviceType.phone:
-        return {
-          'title': isCompact ? 20.0 : 24.0,
-          'subtitle': isCompact ? 14.0 : 16.0,
-          'body': isCompact ? 10.0 : 12.0,
-          'caption': isCompact ? 8.0 : 10.0,
-          'gameOver': isCompact ? 36.0 : 48.0,
-          'pause': isCompact ? 36.0 : 48.0,
-          'score': isCompact ? 16.0 : 20.0,
-        };
+        scaleFactor = baseDimension / (isCompact ? 400.0 : 360.0); // Base reference size for phones
+        break;
       case DeviceType.tablet:
-        return {
-          'title': 28.0,
-          'subtitle': 18.0,
-          'body': 14.0,
-          'caption': 12.0,
-          'gameOver': 56.0,
-          'pause': 56.0,
-          'score': 24.0,
-        };
+        scaleFactor = baseDimension / 768.0; // Base reference size for tablets
+        break;
       case DeviceType.desktop:
-        return {
-          'title': 24.0,
-          'subtitle': 16.0,
-          'body': 12.0,
-          'caption': 10.0,
-          'gameOver': 48.0,
-          'pause': 48.0,
-          'score': 20.0,
-        };
+        scaleFactor = baseDimension / 1024.0; // Base reference size for desktop
+        break;
     }
+    
+    // Clamp scale factor to reasonable bounds
+    scaleFactor = scaleFactor.clamp(0.7, 2.0);
+    
+    // Base font sizes that will be scaled
+    final baseFontSizes = {
+      'title': 24.0,
+      'subtitle': 16.0,
+      'body': 12.0,
+      'caption': 10.0,
+      'gameOver': 48.0,
+      'pause': 48.0,
+      'score': 20.0,
+      'instructions': 12.0,
+      'header': 28.0,
+    };
+    
+    // Apply scaling and device-specific adjustments
+    final scaledSizes = <String, double>{};
+    baseFontSizes.forEach((key, baseSize) {
+      double scaledSize = baseSize * scaleFactor;
+      
+      // Apply minimum and maximum constraints for readability
+      switch (key) {
+        case 'title':
+          scaledSize = scaledSize.clamp(18.0, 36.0);
+          break;
+        case 'subtitle':
+          scaledSize = scaledSize.clamp(12.0, 24.0);
+          break;
+        case 'body':
+          scaledSize = scaledSize.clamp(8.0, 18.0);
+          break;
+        case 'caption':
+          scaledSize = scaledSize.clamp(6.0, 14.0);
+          break;
+        case 'gameOver':
+          scaledSize = scaledSize.clamp(32.0, 72.0);
+          break;
+        case 'pause':
+          scaledSize = scaledSize.clamp(32.0, 72.0);
+          break;
+        case 'score':
+          scaledSize = scaledSize.clamp(14.0, 32.0);
+          break;
+        case 'instructions':
+          scaledSize = scaledSize.clamp(8.0, 18.0);
+          break;
+        case 'header':
+          scaledSize = scaledSize.clamp(20.0, 42.0);
+          break;
+      }
+      
+      scaledSizes[key] = scaledSize;
+    });
+    
+    // Additional adjustments for compact screens
+    if (isCompact && deviceType == DeviceType.phone) {
+      scaledSizes.forEach((key, value) {
+        scaledSizes[key] = value * 0.9; // Slightly reduce for very compact screens
+      });
+    }
+    
+    return scaledSizes;
   }
 
   /// Get appropriate padding for different screen types
@@ -124,61 +173,69 @@ class ResponsiveLayout {
     final isCompact = isCompactScreen(context);
     final size = MediaQuery.of(context).size;
     
+    // Calculate responsive positioning based on screen dimensions
+    final topMargin = size.height * 0.015; // 1.5% of screen height
+    final sideMargin = size.width * 0.02; // 2% of screen width
+    final bottomMargin = size.height * 0.02; // 2% of screen height
+    
     // Phone portrait: stack panels vertically, minimize overlap
     if (deviceType == DeviceType.phone && orientation == ScreenOrientation.portrait) {
+      final scoreHeight = size.height * (isCompact ? 0.08 : 0.12); // 8-12% of screen height
+      final bottomAreaHeight = size.height * (isCompact ? 0.25 : 0.3); // 25-30% for bottom controls
+      
       return {
-        'scorePosition': {'top': 10.0, 'left': 10.0},
-        'objectivesPosition': {'top': 10.0, 'right': 10.0},
-        'controlsPosition': {'bottom': isCompact ? 80.0 : 100.0, 'left': 10.0},
-        'bottomControlsPosition': {'bottom': 10.0, 'right': 10.0},
-        'instructionsVisible': !isCompact,
-        'instructionsPosition': {'bottom': isCompact ? 50.0 : 60.0, 'center': true},
-        'headerVisible': !isCompact,
-        'showCompactUI': isCompact,
-        'panelMaxWidth': size.width * 0.45,
+        'scorePosition': {'top': topMargin, 'left': sideMargin},
+        'objectivesPosition': {'top': topMargin + scoreHeight + (size.height * 0.01), 'left': sideMargin}, // Stack below score with 1% gap
+        'controlsPosition': {'bottom': bottomAreaHeight, 'left': sideMargin},
+        'bottomControlsPosition': {'bottom': bottomMargin, 'right': sideMargin},
+        'instructionsVisible': false, // Always hide in portrait phone mode
+        'instructionsPosition': {'bottom': size.height * 0.1, 'center': true},
+        'headerVisible': false, // Always hide in phone mode
+        'showCompactUI': true, // Always compact on phone
+        'panelMaxWidth': size.width * 0.9, // Almost full width since stacking vertically
       };
     }
     
     // Phone landscape: horizontal layout, more space
     if (deviceType == DeviceType.phone && orientation == ScreenOrientation.landscape) {
       return {
-        'scorePosition': {'top': 10.0, 'left': 10.0},
-        'objectivesPosition': {'top': 10.0, 'right': 10.0},
-        'controlsPosition': {'bottom': 10.0, 'left': 10.0},
-        'bottomControlsPosition': {'bottom': 10.0, 'right': 10.0},
+        'scorePosition': {'top': topMargin, 'left': sideMargin},
+        'objectivesPosition': {'top': topMargin, 'right': sideMargin},
+        'controlsPosition': {'bottom': size.height * 0.15, 'left': sideMargin}, // 15% from bottom
+        'bottomControlsPosition': {'bottom': bottomMargin, 'right': sideMargin},
         'instructionsVisible': false, // Hidden in landscape to save space
         'headerVisible': false, // Hidden in landscape
         'showCompactUI': true,
-        'panelMaxWidth': size.width * 0.3,
+        'panelMaxWidth': size.width * 0.25, // Much smaller to ensure no overlap
       };
     }
     
     // Tablet: more space, standard layout
     if (deviceType == DeviceType.tablet) {
       return {
-        'scorePosition': {'top': 10.0, 'left': 10.0},
-        'objectivesPosition': {'top': 10.0, 'right': 10.0},
-        'controlsPosition': {'bottom': 10.0, 'left': 10.0},
-        'bottomControlsPosition': {'bottom': 20.0, 'right': 20.0},
+        'scorePosition': {'top': topMargin, 'left': sideMargin},
+        'objectivesPosition': {'top': topMargin, 'right': sideMargin},
+        'controlsPosition': {'bottom': size.height * 0.08, 'left': sideMargin}, // 8% from bottom
+        'bottomControlsPosition': {'bottom': bottomMargin * 1.5, 'right': sideMargin * 1.5},
         'instructionsVisible': true,
-        'instructionsPosition': {'bottom': 20.0, 'center': true},
+        'instructionsPosition': {'bottom': bottomMargin * 1.5, 'center': true},
         'headerVisible': true,
         'showCompactUI': false,
         'panelMaxWidth': size.width * 0.25,
       };
     }
     
-    // Desktop: full layout
+    // Desktop: full layout with responsive positioning
     return {
-      'scorePosition': {'top': 10.0, 'left': 10.0},
-      'objectivesPosition': {'top': 10.0, 'right': 10.0},
-      'controlsPosition': {'bottom': 10.0, 'left': 10.0},
-      'bottomControlsPosition': {'bottom': 20.0, 'right': 20.0},
+      'scorePosition': {'top': topMargin, 'left': sideMargin},
+      'objectivesPosition': {'top': topMargin, 'right': sideMargin},
+      'controlsPosition': {'bottom': size.height * 0.06, 'left': sideMargin}, // 6% from bottom
+      'bottomControlsPosition': {'bottom': bottomMargin * 1.5, 'right': sideMargin * 1.5},
       'instructionsVisible': true,
-      'instructionsPosition': {'bottom': 20.0, 'center': true},
+      'instructionsPosition': {'bottom': bottomMargin * 1.5, 'center': true},
       'headerVisible': true,
       'showCompactUI': false,
-      'panelMaxWidth': 300.0,
+      'panelMaxWidth': size.width > 1200 ? 350.0 : (size.width * 0.28), // Responsive max width
     };
   }
 
@@ -226,6 +283,46 @@ class ResponsiveLayout {
         return deviceType == DeviceType.phone ? (isCompact ? 4.0 : 6.0) : 8.0;
       default:
         return deviceType == DeviceType.phone ? (isCompact ? 6.0 : 10.0) : 12.0;
+    }
+  }
+
+  /// Get responsive TextStyle for different text types
+  TextStyle getTextStyle(BuildContext context, String textType, {Color? color, FontWeight? fontWeight}) {
+    final fontSizes = getFontSizes(context);
+    final fontSize = fontSizes[textType] ?? fontSizes['body']!;
+    
+    return TextStyle(
+      fontSize: fontSize,
+      color: color ?? Colors.white,
+      fontWeight: fontWeight ?? FontWeight.normal,
+      shadows: textType == 'gameOver' || textType == 'pause' || textType == 'header'
+          ? [
+              Shadow(
+                blurRadius: 4.0,
+                color: Colors.black.withOpacity(0.7),
+                offset: const Offset(2.0, 2.0),
+              ),
+            ]
+          : null,
+    );
+  }
+
+  /// Get responsive icon size
+  double getIconSize(BuildContext context, {String type = 'default'}) {
+    final size = MediaQuery.of(context).size;
+    final deviceType = getDeviceType(context);
+    final isCompact = isCompactScreen(context);
+    
+    // Base icon size relative to screen width
+    final baseSize = size.width * 0.08; // 8% of screen width
+    
+    switch (type) {
+      case 'small':
+        return (baseSize * 0.6).clamp(16.0, 32.0);
+      case 'large':
+        return (baseSize * 1.5).clamp(32.0, 64.0);
+      default:
+        return baseSize.clamp(24.0, 48.0);
     }
   }
 }
