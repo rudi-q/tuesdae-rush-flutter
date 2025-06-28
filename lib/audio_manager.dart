@@ -9,7 +9,7 @@ class AudioManager {
   final AudioPlayer _soundEffectPlayer = AudioPlayer();
   final AudioPlayer _sirenPlayer = AudioPlayer();
   
-  bool _soundEnabled = true;
+  bool _soundEnabled = false;
   double _volume = 0.7;
 
   bool get soundEnabled => _soundEnabled;
