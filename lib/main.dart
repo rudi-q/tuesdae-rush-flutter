@@ -290,6 +290,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             Text('Arrow Keys: Traffic Lights', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('Space bar: Pause/Resume', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('1-5 Keys: Change Difficulty', style: TextStyle(color: Colors.white, fontSize: 10)),
+            Text('S Key: Toggle Audio', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('R Key: Restart (Game Over)', style: TextStyle(color: Colors.white, fontSize: 10)),
             Text('Tap: Toggle Lights', style: TextStyle(color: Colors.white, fontSize: 10)),
           ],
@@ -341,6 +342,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             onTap: () {
               setState(() {
                 isFullscreen = !isFullscreen;
+              });
+            },
+          ),
+          SizedBox(width: 10),
+          _buildControlButton(
+            icon: audioManager.soundEnabled ? '🔊' : '🔇',
+            onTap: () {
+              setState(() {
+                audioManager.setSoundEnabled(!audioManager.soundEnabled);
               });
             },
           ),
@@ -475,6 +485,12 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               gameState.restart();
             });
           }
+          break;
+        case 's':
+        case 'S':
+          setState(() {
+            audioManager.setSoundEnabled(!audioManager.soundEnabled);
+          });
           break;
       }
     }
