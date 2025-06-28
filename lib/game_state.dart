@@ -103,7 +103,9 @@ class GameState {
     double lightDistance = 120;
     double centerX = gameWidth / 2;
     double centerY = gameHeight / 2;
-    double touchSize = 60;
+    // Larger touch areas for mobile - minimum 80px, scales with screen size
+    double minDimension = math.min(gameWidth, gameHeight);
+    double touchSize = math.max(80, minDimension * 0.12);
 
     _touchAreas = [
       TrafficLightTouchArea(
