@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -6,10 +7,11 @@ import 'game_state.dart';
 
 class GamePainter extends CustomPainter {
   final GameState gameState;
+  final ui.Image? backgroundImage;
   late double centerX;
   late double centerY;
 
-  GamePainter(this.gameState) {
+  GamePainter(this.gameState, [this.backgroundImage]) {
     centerX = gameState.gameWidth / 2;
     centerY = gameState.gameHeight / 2;
   }
@@ -24,8 +26,10 @@ class GamePainter extends CustomPainter {
     // Draw background
     _drawBackground(canvas, size);
 
-    // Draw scenery (trees)
-    _drawTrees(canvas, size);
+    // Draw scenery (trees) - only when using gradient background
+    if (backgroundImage == null) {
+      _drawTrees(canvas, size);
+    }
 
     // Draw roads
     _drawRoads(canvas, size);
@@ -48,43 +52,76 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawBackground(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF1B5E20), // Dark green
-          Color(0xFF2E7D32), // Medium green
-          Color(0xFF388E3C), // Forest green
-          Color(0xFF43A047), // Light green
-        ],
-        stops: [0.0, 0.3, 0.7, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-
-    //  If you want to use an actual image (uncomment below):
-  /*  final ui.Image backgroundImage = Image.asset('assets/images/grass_texture.jpg');
     if (backgroundImage != null) {
-      paintImage(
-        canvas: canvas,
-        rect: Rect.fromLTWH(0, 0, size.width, size.height),
-        image: backgroundImage,
-        fit: BoxFit.cover,
-      );
-    }*/
+      // Tile the grass texture image in a 2x2 pattern with mirroring for seamless look
+      double tileWidth = size.width / 2;
+      double tileHeight = size.height / 2;
+      
+      // Draw 4 tiles with different mirror orientations
+      for (int row = 0; row < 2; row++) {
+        for (int col = 0; col < 2; col++) {
+          double x = col * tileWidth;
+          double y = row * tileHeight;
+          
+          canvas.save();
+          
+          // Apply transformations based on tile position
+          canvas.translate(x + tileWidth / 2, y + tileHeight / 2); // Move to tile center
+          
+          if (row == 0 && col == 1) {
+            // Second tile of first row: Mirror horizontally
+            canvas.scale(-1, 1);
+          } else if (row == 1 && col == 0) {
+            // First tile of second row: Mirror vertically  
+            canvas.scale(1, -1);
+          } else if (row == 1 && col == 1) {
+            // Second tile of second row: Mirror both horizontally and vertically
+            canvas.scale(-1, -1);
+          }
+          // First tile (row 0, col 0) remains original - no scaling
+          
+          canvas.translate(-tileWidth / 2, -tileHeight / 2); // Move back from center
+          
+          paintImage(
+            canvas: canvas,
+            rect: Rect.fromLTWH(0, 0, tileWidth, tileHeight),
+            image: backgroundImage!,
+            fit: BoxFit.cover,
+          );
+          
+          canvas.restore();
+        }
+      }
+    } else {
+      // Fallback to gradient if image hasn't loaded yet
+      final paint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1B5E20), // Dark green
+            Color(0xFF2E7D32), // Medium green
+            Color(0xFF388E3C), // Forest green
+            Color(0xFF43A047), // Light green
+          ],
+          stops: [0.0, 0.3, 0.7, 1.0],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    // Add subtle texture overlay
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+    }
+
+    // Add subtle texture overlay (reduced opacity since we have real texture now)
     _drawBackgroundTexture(canvas, size);
   }
 
   void _drawBackgroundTexture(Canvas canvas, Size size) {
-    // Create subtle grass-like texture with small dots
+    // Create subtle grass-like texture with small dots (reduced when using real texture)
     final texturePaint = Paint()
-      ..color = Color(0xFF4CAF50).withValues(alpha: 0.3);
+      ..color = Color(0xFF4CAF50).withValues(alpha: backgroundImage != null ? 0.1 : 0.3);
 
     math.Random random = math.Random(42); // Fixed seed for consistent pattern
-    for (int i = 0; i < 200; i++) {
+    int dotCount = backgroundImage != null ? 50 : 200; // Fewer dots when using real texture
+    for (int i = 0; i < dotCount; i++) {
       double x = random.nextDouble() * size.width;
       double y = random.nextDouble() * size.height;
       double radius = 0.5 + random.nextDouble() * 1.5;

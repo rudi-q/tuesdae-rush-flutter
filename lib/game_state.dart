@@ -546,7 +546,7 @@ class GameState {
     nextSpawnTime = 0;
     isPaused = false;
     isGameOver = false;
-    gameStarted = false;
+    gameStarted = true;  // Keep game running after restart
     gameOverReason = '';
     
     objectives = {
@@ -789,7 +789,6 @@ class Car {
         return 84;
       case CarType.impatient:
       case CarType.regular:
-      default:
         return 20;
     }
   }
