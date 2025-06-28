@@ -29,8 +29,14 @@ class AudioManager {
   }
 
   Future<void> initialize() async {
-    await _soundEffectPlayer.setVolume(_volume);
-    await _sirenPlayer.setVolume(_volume * 0.6);
+    try {
+      await _soundEffectPlayer.setVolume(_volume);
+      await _soundEffectPlayer.setReleaseMode(ReleaseMode.stop);
+      await _sirenPlayer.setVolume(_volume * 0.6);
+      await _sirenPlayer.setReleaseMode(ReleaseMode.loop);
+    } catch (e) {
+      debugPrint('Error initializing audio: $e');
+    }
   }
 
   // Sound effects
@@ -70,12 +76,14 @@ class AudioManager {
     }
   }
 
-  // Continuous sounds (sirens)
+  // Continuous sounds (sirens) - with improved threading handling
   Future<void> playAmbulanceSiren() async {
     if (!_soundEnabled) return;
     try {
+      // Stop any existing siren first
+      await _sirenPlayer.stop();
       await _sirenPlayer.play(AssetSource('audio/car_ambulance_siren.mp3'));
-      await _sirenPlayer.setPlaybackRate(1.0);
+      await _sirenPlayer.setReleaseMode(ReleaseMode.loop); // Loop the siren
     } catch (e) {
       debugPrint('Error playing ambulance siren: $e');
     }
@@ -84,8 +92,10 @@ class AudioManager {
   Future<void> playPoliceSiren() async {
     if (!_soundEnabled) return;
     try {
+      // Stop any existing siren first
+      await _sirenPlayer.stop();
       await _sirenPlayer.play(AssetSource('audio/car_police_siren.mp3'));
-      await _sirenPlayer.setPlaybackRate(1.0);
+      await _sirenPlayer.setReleaseMode(ReleaseMode.loop); // Loop the siren
     } catch (e) {
       debugPrint('Error playing police siren: $e');
     }

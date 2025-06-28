@@ -343,6 +343,11 @@ class GameState {
         Car car2 = cars[j];
 
         if (car1.crashed || car2.crashed) continue;
+        
+        // Emergency vehicles (police and ambulance) cannot crash with each other
+        bool car1Emergency = (car1.type == CarType.police || car1.type == CarType.ambulance);
+        bool car2Emergency = (car2.type == CarType.police || car2.type == CarType.ambulance);
+        if (car1Emergency && car2Emergency) continue;
 
         double distance = math.sqrt(
           math.pow(car1.x - car2.x, 2) + math.pow(car1.y - car2.y, 2)
