@@ -454,28 +454,35 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     final responsive = ResponsiveLayout.instance;
     
     return Positioned.fill(
-      child: Container(
-        color: Color(0xFF1E3264).withValues(alpha: 0.8),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'GAME OVER',
-                style: responsive.getTextStyle(context, 'gameOver', color: Colors.red, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: responsive.getSpacing(context, type: 'medium')),
-              Text(
-                gameState.gameOverReason,
-                style: responsive.getTextStyle(context, 'title'),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: responsive.getSpacing(context, type: 'large')),
-              Text(
-                'Press R to restart',
-                style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFFF64)),
-              ),
-            ],
+      child: GestureDetector(
+        onTap: gameState.isGameOver ? () {
+          setState(() {
+            gameState.restart();
+          });
+        } : null,
+        child: Container(
+          color: Color(0xFF1E3264).withValues(alpha: 0.8),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'GAME OVER',
+                  style: responsive.getTextStyle(context, 'gameOver', color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: responsive.getSpacing(context, type: 'medium')),
+                Text(
+                  gameState.gameOverReason,
+                  style: responsive.getTextStyle(context, 'title'),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: responsive.getSpacing(context, type: 'large')),
+                Text(
+                  'Press R or tap screen to restart',
+                  style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFFF64)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
