@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'audio_manager.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
+import 'mobile_manager.dart';
 
 void main() {
   runApp(TuesdaeRushApp());
@@ -41,6 +42,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   late AnimationController _gameLoopController;
   late GameState gameState;
   late AudioManager audioManager;
+  late MobileManager mobileManager;
   bool isDarkMode = true;
   bool isFullscreen = false;
 
@@ -50,6 +52,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
     gameState = GameState();
     audioManager = AudioManager();
+    mobileManager = MobileManager();
 
     // 60 FPS game loop
     _gameLoopController = AnimationController(
@@ -59,9 +62,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
     _gameLoopController.addListener(_gameLoop);
 
-    // Initialize game and audio
+    // Initialize game, audio, and mobile features
     gameState.initialize();
     audioManager.initialize();
+    mobileManager.initialize();
   }
 
   void _gameLoop() {
@@ -331,6 +335,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           _buildControlButton(
             icon: isDarkMode ? '🌙' : '☀️',
             onTap: () {
+              mobileManager.selectionHaptic();
               setState(() {
                 isDarkMode = !isDarkMode;
               });
@@ -340,6 +345,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           _buildControlButton(
             icon: isFullscreen ? '⛷' : '⛶',
             onTap: () {
+              mobileManager.selectionHaptic();
               setState(() {
                 isFullscreen = !isFullscreen;
               });
@@ -349,6 +355,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           _buildControlButton(
             icon: audioManager.soundEnabled ? '🔊' : '🔇',
             onTap: () {
+              mobileManager.selectionHaptic();
               setState(() {
                 audioManager.setSoundEnabled(!audioManager.soundEnabled);
               });
@@ -438,18 +445,22 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         case 'Arrow Up':
           gameState.toggleTrafficLight(Direction.north);
           audioManager.playTrafficLightSwitch();
+          mobileManager.lightHaptic();
           break;
         case 'Arrow Down':
           gameState.toggleTrafficLight(Direction.south);
           audioManager.playTrafficLightSwitch();
+          mobileManager.lightHaptic();
           break;
         case 'Arrow Right':
           gameState.toggleTrafficLight(Direction.east);
           audioManager.playTrafficLightSwitch();
+          mobileManager.lightHaptic();
           break;
         case 'Arrow Left':
           gameState.toggleTrafficLight(Direction.west);
           audioManager.playTrafficLightSwitch();
+          mobileManager.lightHaptic();
           break;
         case '1':
           gameState.changeDifficulty(Difficulty.easy);
@@ -737,6 +748,7 @@ class GameCanvasState extends State<GameCanvas> {
               onTap: () {
                 widget.gameState.toggleTrafficLight(touchArea.direction);
                 AudioManager().playTrafficLightSwitch();
+                MobileManager().lightHaptic();
               },
               child: Container(
                 color: Colors.transparent,

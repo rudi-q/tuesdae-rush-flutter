@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'audio_manager.dart';
+import 'mobile_manager.dart';
 
 enum Direction { north, south, east, west }
 enum LightState { red, green }
@@ -103,9 +104,8 @@ class GameState {
     double lightDistance = 120;
     double centerX = gameWidth / 2;
     double centerY = gameHeight / 2;
-    // Larger touch areas for mobile - minimum 80px, scales with screen size
-    double minDimension = math.min(gameWidth, gameHeight);
-    double touchSize = math.max(80, minDimension * 0.12);
+    // Dynamic touch areas based on device type and screen size
+    double touchSize = MobileManager().getTouchTargetSize(gameWidth, gameHeight);
 
     _touchAreas = [
       TrafficLightTouchArea(
@@ -170,8 +170,9 @@ class GameState {
           score += points;
           totalCarsPassed++;
           
-          // Play car passed sound
+          // Play car passed sound and haptic
           AudioManager().playCarPassed();
+          MobileManager().mediumHaptic();
           
           // Add score popup
           scorePopups.add(ScorePopup(
@@ -403,8 +404,9 @@ class GameState {
     crashEffects.add(CrashEffect(x: crashX, y: crashY, timer: 60));
     score = math.max(0, score - 5);
     
-    // Play crash sound
+    // Play crash sound and haptic
     AudioManager().playCrash();
+    MobileManager().errorHaptic();
 
     scorePopups.add(ScorePopup(
       x: crashX,
@@ -528,8 +530,9 @@ class GameState {
   void _awardObjectiveBonus(String objectiveName, int bonus) {
     score += bonus;
     
-    // Play special achievement sound
+    // Play special achievement sound and haptic
     AudioManager().playPerfectFlow();
+    MobileManager().successHaptic();
     
     scorePopups.add(ScorePopup(
       x: gameWidth / 2,
