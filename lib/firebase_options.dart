@@ -3,7 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -41,50 +40,28 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // Helper method to get environment variable with proper fallback chain
-  static String _getEnvVar(String key, String fallback) {
-    if (kIsWeb) {
-      // Web: Only use compile-time environment (--dart-define)
-      return String.fromEnvironment(key, defaultValue: fallback);
-    } else {
-      // Native: Try compile-time first, then dotenv, then fallback
-      String compileTimeValue = String.fromEnvironment(key, defaultValue: '');
-      if (compileTimeValue.isNotEmpty) {
-        return compileTimeValue;
-      }
-      
-      String? dotenvValue = dotenv.env[key];
-      if (dotenvValue != null && dotenvValue.isNotEmpty && !dotenvValue.endsWith('_NOT_SET')) {
-        return dotenvValue;
-      }
-      
-      return fallback;
-    }
-  }
+  // Hardcoded Firebase configuration values
+  static const String _webApiKey = 'AIzaSyARJjeYc4M0lIRbYVwFNBzhp6DoBl7yPIk';
+  static const String _webAppId = '1:300081682240:web:ffe6ee1008e8ce7fe18ca5';
+  static const String _messagingSenderId = '300081682240';
+  static const String _projectId = 'tuesdaerush';
+  static const String _storageBucket = 'tuesdaerush.firebasestorage.app';
+  static const String _authDomain = 'tuesdaerush.firebaseapp.com';
+  static const String _measurementId = 'G-QDWQG17Z79';
   
-  // Web platform: Use String.fromEnvironment directly (const-compatible)
-  static const String _webApiKey = String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: 'WEB_API_KEY_NOT_SET');
-  static const String _webAppId = String.fromEnvironment('FIREBASE_WEB_APP_ID', defaultValue: 'WEB_APP_ID_NOT_SET');
-  static const String _messagingSenderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID', defaultValue: 'MESSAGING_SENDER_ID_NOT_SET');
-  static const String _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID', defaultValue: 'PROJECT_ID_NOT_SET');
-  static const String _storageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET', defaultValue: 'STORAGE_BUCKET_NOT_SET');
-  static const String _authDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN', defaultValue: 'AUTH_DOMAIN_NOT_SET');
-  static const String _measurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID', defaultValue: 'MEASUREMENT_ID_NOT_SET');
+  static const String _androidApiKey = 'AIzaSyBNgz5KrpuxrVxOJk02FSeRvWQDzdFdnPc';
+  static const String _androidAppId = '1:300081682240:android:a916c2a2370e5fa8e18ca5';
   
-  // Native platform environment variables (still use getters for .env fallback)
-  static String get _androidApiKey => _getEnvVar('FIREBASE_ANDROID_API_KEY', 'ANDROID_API_KEY_NOT_SET');
-  static String get _androidAppId => _getEnvVar('FIREBASE_ANDROID_APP_ID', 'ANDROID_APP_ID_NOT_SET');
+  static const String _iosApiKey = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
+  static const String _iosAppId = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
   
-  static String get _iosApiKey => _getEnvVar('FIREBASE_IOS_API_KEY', 'IOS_API_KEY_NOT_SET');
-  static String get _iosAppId => _getEnvVar('FIREBASE_IOS_APP_ID', 'IOS_APP_ID_NOT_SET');
+  static const String _macosApiKey = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
+  static const String _macosAppId = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
   
-  static String get _macosApiKey => _getEnvVar('FIREBASE_MACOS_API_KEY', 'MACOS_API_KEY_NOT_SET');
-  static String get _macosAppId => _getEnvVar('FIREBASE_MACOS_APP_ID', 'MACOS_APP_ID_NOT_SET');
+  static const String _windowsApiKey = 'AIzaSyARJjeYc4M0lIRbYVwFNBzhp6DoBl7yPIk';
+  static const String _windowsAppId = '1:300081682240:web:3252e3ab8e08ae76e18ca5';
   
-  static String get _windowsApiKey => _getEnvVar('FIREBASE_WINDOWS_API_KEY', 'WINDOWS_API_KEY_NOT_SET');
-  static String get _windowsAppId => _getEnvVar('FIREBASE_WINDOWS_APP_ID', 'WINDOWS_APP_ID_NOT_SET');
-  
-  static FirebaseOptions get web => FirebaseOptions(
+  static const FirebaseOptions web = FirebaseOptions(
     apiKey: _webApiKey,
     appId: _webAppId,
     messagingSenderId: _messagingSenderId,
@@ -94,7 +71,7 @@ class DefaultFirebaseOptions {
     measurementId: _measurementId,
   );
 
-  static FirebaseOptions get android => FirebaseOptions(
+  static const FirebaseOptions android = FirebaseOptions(
     apiKey: _androidApiKey,
     appId: _androidAppId,
     messagingSenderId: _messagingSenderId,
@@ -102,7 +79,7 @@ class DefaultFirebaseOptions {
     storageBucket: _storageBucket,
   );
 
-  static FirebaseOptions get ios => FirebaseOptions(
+  static const FirebaseOptions ios = FirebaseOptions(
     apiKey: _iosApiKey,
     appId: _iosAppId,
     messagingSenderId: _messagingSenderId,
@@ -111,7 +88,7 @@ class DefaultFirebaseOptions {
     iosBundleId: 'games.tuesdae.tuesdae-rush',
   );
 
-  static FirebaseOptions get macos => FirebaseOptions(
+  static const FirebaseOptions macos = FirebaseOptions(
     apiKey: _macosApiKey,
     appId: _macosAppId,
     messagingSenderId: _messagingSenderId,
@@ -120,7 +97,7 @@ class DefaultFirebaseOptions {
     iosBundleId: 'games.tuesdae.tuesdae-rush',
   );
 
-  static FirebaseOptions get windows => FirebaseOptions(
+  static const FirebaseOptions windows = FirebaseOptions(
     apiKey: _windowsApiKey,
     appId: _windowsAppId,
     messagingSenderId: _messagingSenderId,

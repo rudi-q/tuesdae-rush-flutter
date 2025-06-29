@@ -5,8 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:io' show Platform;
 
 import 'audio_manager.dart';
 import 'game_painter.dart';
@@ -18,25 +16,6 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load environment variables (native platforms only)
-  if (!kIsWeb) {
-    // Native platforms: Use .env file
-    try {
-      await dotenv.load(fileName: ".env", mergeWith: Platform.environment);
-      if (kDebugMode) {
-        print('Environment variables loaded from .env (native)');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('No .env file found, using platform environment: $e');
-      }
-      dotenv.testLoad(fileInput: '', mergeWith: Platform.environment);
-    }
-  } else {
-    if (kDebugMode) {
-      print('Web platform: Using String.fromEnvironment for Firebase config');
-    }
-  }
   
   // Initialize Firebase with proper error handling
   try {
