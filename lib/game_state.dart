@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'analytics_service.dart';
 import 'audio_manager.dart';
+import 'mobile_manager.dart';
 
 enum Direction { north, south, east, west }
 enum LightState { red, green }
@@ -104,7 +105,8 @@ class GameState {
     double lightDistance = 120;
     double centerX = gameWidth / 2;
     double centerY = gameHeight / 2;
-    double touchSize = 60;
+    // Dynamic touch areas based on device type and screen size
+    double touchSize = MobileManager().getTouchTargetSize(gameWidth, gameHeight);
 
     _touchAreas = [
       TrafficLightTouchArea(
@@ -169,7 +171,7 @@ class GameState {
           int oldScore = score;
           score += points;
           totalCarsPassed++;
-          
+
           // Track score milestones
           _checkScoreMilestones(oldScore, score);
           
@@ -178,8 +180,9 @@ class GameState {
             AnalyticsService.logCarsPassed(totalCarsPassed);
           }
           
-          // Play car passed sound
+        // Play car passed sound and haptic
           AudioManager().playCarPassed();
+          MobileManager().mediumHaptic();
           
           // Add score popup
           scorePopups.add(ScorePopup(
@@ -411,8 +414,9 @@ class GameState {
     crashEffects.add(CrashEffect(x: crashX, y: crashY, timer: 60));
     score = math.max(0, score - 5);
     
-    // Play crash sound
+    // Play crash sound and haptic
     AudioManager().playCrash();
+    MobileManager().errorHaptic();
 
     scorePopups.add(ScorePopup(
       x: crashX,
@@ -535,19 +539,20 @@ class GameState {
 
   void _awardObjectiveBonus(String objectiveName, int bonus) {
     score += bonus;
-    
+
     // Track objective completion analytics
     AnalyticsService.logObjectiveCompleted(objectiveName);
     
-    // Play special achievement sound
+    // Play special achievement sound and haptic
     AudioManager().playPerfectFlow();
+    MobileManager().successHaptic();
     
     scorePopups.add(ScorePopup(
       x: gameWidth / 2,
       y: gameHeight / 2 - 50,
       text: '$objectiveName: +$bonus',
       timer: 180,
-      color: Color(0xFFFFD700),
+      color: Color(0xFF4CAF50), // Green for achievements to distinguish from regular scores
     ));
   }
 
