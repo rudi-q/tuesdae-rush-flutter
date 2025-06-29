@@ -131,13 +131,11 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
   Widget _buildHeader() {
     final responsive = ResponsiveLayout.instance;
-    final layout = responsive.getUILayout(context);
     final size = MediaQuery.of(context).size;
     final topMargin = size.height * 0.02;
     final padding = responsive.getPadding(context, type: 'panel');
     
-    // Note: Don't check layout['headerVisible'] here because we want the fullscreen toggle
-    // to work on mobile devices too. The main widget already controls visibility with isFullscreen.
+    // Note: Fullscreen toggle controls visibility independently of responsive layout
     
     return Positioned(
       top: topMargin,
@@ -181,10 +179,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   Widget _buildScorePanel() {
     final responsive = ResponsiveLayout.instance;
     final layout = responsive.getUILayout(context);
-    final deviceType = responsive.getDeviceType(context);
     final padding = responsive.getPadding(context, type: 'panel');
     final opacity = responsive.getPanelOpacity(context);
-    final showCompact = layout['showCompactUI'] ?? false;
     final isMobile = _isMobile(context);
     
     return Positioned(

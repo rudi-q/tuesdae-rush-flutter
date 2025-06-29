@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tuesdae_rush/game_state.dart';
-import 'package:tuesdae_rush/audio_manager.dart';
 
 void main() {
   group('GameState Tests', () {
@@ -243,7 +242,6 @@ void main() {
         gameState.carSpawnTimer = 0;
         gameState.nextSpawnTime = 0;
         
-        int initialCars = gameState.cars.length;
         gameState.update();
         
         // Should have spawned a car or updated spawn timer

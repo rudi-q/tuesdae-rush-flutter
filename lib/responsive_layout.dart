@@ -304,7 +304,7 @@ class ResponsiveLayout {
           ? [
               Shadow(
                 blurRadius: 4.0,
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 offset: const Offset(2.0, 2.0),
               ),
             ]
@@ -315,8 +315,6 @@ class ResponsiveLayout {
   /// Get responsive icon size
   double getIconSize(BuildContext context, {String type = 'default'}) {
     final size = MediaQuery.of(context).size;
-    final deviceType = getDeviceType(context);
-    final isCompact = isCompactScreen(context);
     
     // Base icon size relative to screen width
     final baseSize = size.width * 0.08; // 8% of screen width

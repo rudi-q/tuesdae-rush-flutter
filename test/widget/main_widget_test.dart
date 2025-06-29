@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tuesdae_rush/main.dart';
-import 'package:tuesdae_rush/game_state.dart';
 
 void main() {
   group('Main Widget Tests', () {
