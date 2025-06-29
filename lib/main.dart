@@ -48,7 +48,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   bool isDarkMode = true;
   bool isFullscreen = false;
   bool showInstructions = true;
-  List<String> recentObjectives = [];
 
   @override
   void initState() {
@@ -77,29 +76,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     if (mounted && !gameState.isPaused && !gameState.isGameOver && gameState.gameStarted) {
       setState(() {
         gameState.update();
-        _checkForNewObjectives();
       });
     }
-  }
-
-  void _checkForNewObjectives() {
-    // Check for newly completed objectives and add to recent list
-    gameState.objectives.entries.forEach((entry) {
-      if (entry.value && gameState.objectivesCompleted[entry.key] == true) {
-        String objectiveName = _getObjectiveText(entry.key, entry.value).split(' (')[0]; // Remove progress text
-        if (!recentObjectives.contains(objectiveName)) {
-          recentObjectives.add(objectiveName);
-          // Remove after 3 seconds
-          Future.delayed(Duration(seconds: 3), () {
-            if (mounted) {
-              setState(() {
-                recentObjectives.remove(objectiveName);
-              });
-            }
-          });
-        }
-      }
-    });
   }
 
   @override
@@ -136,9 +114,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             
             // Mobile help button (bottom left)
             if (_isMobile(context)) _buildMobileHelpButton(),
-            
-            // Mobile objective notifications
-            if (_isMobile(context)) _buildMobileObjectiveNotifications(),
 
             // Game Over Overlay
             if (gameState.isGameOver) _buildGameOverOverlay(),
@@ -161,9 +136,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     final topMargin = size.height * 0.02;
     final padding = responsive.getPadding(context, type: 'panel');
     
-    if (!layout['headerVisible']) {
-      return SizedBox.shrink();
-    }
+    // Note: Don't check layout['headerVisible'] here because we want the fullscreen toggle
+    // to work on mobile devices too. The main widget already controls visibility with isFullscreen.
     
     return Positioned(
       top: topMargin,
@@ -211,10 +185,11 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     final padding = responsive.getPadding(context, type: 'panel');
     final opacity = responsive.getPanelOpacity(context);
     final showCompact = layout['showCompactUI'] ?? false;
+    final isMobile = _isMobile(context);
     
     return Positioned(
       top: layout['scorePosition']['top'],
-      left: layout['scorePosition']['left'],
+      left: layout['scorePosition']['left'], // Back to top left corner
       child: Container(
         constraints: BoxConstraints(
           maxWidth: layout['panelMaxWidth'],
@@ -228,18 +203,14 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!showCompact) ...[
-              Text('Score: ${gameState.score}', style: responsive.getTextStyle(context, 'score', fontWeight: FontWeight.bold)),
-              Text('Difficulty: ${gameState.currentDifficulty.name}', style: responsive.getTextStyle(context, 'body', color: gameState.getDifficultyColor())),
-              Text('Multiplier: x${gameState.getDifficultyMultiplier()}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFFFFF96))),
-              Text('Cars: ${gameState.totalCarsPassed}/${gameState.totalCarsSpawned}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFC8FFC8))),
-              Text('Crashed: ${gameState.totalCarsCrashed}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFFF9696))),
-              Text('Waiting: ${gameState.getWaitingCarsCount()}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFFFC864))),
-              Text('Success: ${gameState.getSuccessRate()}%', style: responsive.getTextStyle(context, 'caption', color: Colors.yellow)),
-            ],
-            if (showCompact || deviceType == DeviceType.phone) ...[
-              Text('Score: ${gameState.score}', style: responsive.getTextStyle(context, 'score', fontWeight: FontWeight.bold)),
-            ]
+            // Always show full details with slightly larger text on mobile
+            Text('Score: ${gameState.score}', style: responsive.getTextStyle(context, 'score', fontWeight: FontWeight.bold)),
+            Text('Difficulty: ${gameState.currentDifficulty.name}', style: responsive.getTextStyle(context, isMobile ? 'body' : 'caption', color: gameState.getDifficultyColor())),
+            Text('Multiplier: x${gameState.getDifficultyMultiplier()}', style: responsive.getTextStyle(context, isMobile ? 'body' : 'caption', color: Color(0xFFFFFF96))),
+            Text('Cars: ${gameState.totalCarsPassed}/${gameState.totalCarsSpawned}', style: responsive.getTextStyle(context, isMobile ? 'body' : 'caption', color: Color(0xFFC8FFC8))),
+            Text('Crashed: ${gameState.totalCarsCrashed}', style: responsive.getTextStyle(context, isMobile ? 'body' : 'caption', color: Color(0xFFFF9696))),
+            Text('Waiting: ${gameState.getWaitingCarsCount()}', style: responsive.getTextStyle(context, isMobile ? 'body' : 'caption', color: Color(0xFFFFC864))),
+            Text('Success: ${gameState.getSuccessRate()}%', style: responsive.getTextStyle(context, isMobile ? 'body' : 'caption', color: Colors.yellow)),
           ],
         ),
       ),
@@ -423,16 +394,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           ),
           SizedBox(width: 8),
           _buildControlButton(
-            icon: isDarkMode ? '🌙' : '☀️',
-            onTap: () {
-              setState(() {
-                isDarkMode = !isDarkMode;
-              });
-              mobileManager.selectionHaptic();
-            },
-          ),
-          SizedBox(width: 8),
-          _buildControlButton(
             icon: audioManager.soundEnabled ? '🔊' : '🔇',
             onTap: () {
               setState(() {
@@ -468,36 +429,76 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     final responsive = ResponsiveLayout.instance;
     
     return Positioned.fill(
-      child: GestureDetector(
-        onTap: gameState.isGameOver ? () {
-          setState(() {
-            gameState.restart();
-            recentObjectives.clear(); // Clear mobile notifications on restart
-          });
-        } : null,
-        child: Container(
-          color: Color(0xFF1E3264).withValues(alpha: 0.8),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'GAME OVER',
-                  style: responsive.getTextStyle(context, 'gameOver', color: Colors.red, fontWeight: FontWeight.bold),
+      child: Container(
+        color: Color(0xFF1E3264).withValues(alpha: 0.8),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'GAME OVER',
+                style: responsive.getTextStyle(context, 'gameOver', color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: responsive.getSpacing(context, type: 'medium')),
+              Text(
+                'Score: ${gameState.score}',
+                style: responsive.getTextStyle(context, 'title'),
+              ),
+              SizedBox(height: 10),
+              Text(
+                gameState.gameOverReason,
+                style: responsive.getTextStyle(context, 'title'),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: responsive.getSpacing(context, type: 'large')),
+              // Mobile-friendly restart button
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    gameState.restart();
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF4CAF50),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'RESTART',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: responsive.getSpacing(context, type: 'medium')),
-                Text(
-                  gameState.gameOverReason,
-                  style: responsive.getTextStyle(context, 'title'),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: responsive.getSpacing(context, type: 'large')),
-                Text(
-                  'Press R or tap screen to restart',
-                  style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFFF64)),
-                ),
-              ],
-            ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Tap button above or press R to restart',
+                style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFFF64)),
+              ),
+            ],
           ),
         ),
       ),
@@ -592,7 +593,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         if (gameState.isGameOver) {
           setState(() {
             gameState.restart();
-            recentObjectives.clear(); // Clear mobile notifications on restart
           });
         }
         return KeyEventResult.handled;
@@ -815,100 +815,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
-  Widget _buildMobileObjectiveNotifications() {
-    if (recentObjectives.isEmpty) {
-      return Container();
-    }
 
-    return Positioned(
-      top: 80,
-      left: 20,
-      right: 20,
-      child: Column(
-        children: recentObjectives.map((objective) {
-          return Container(
-            margin: EdgeInsets.only(bottom: 8),
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFFD700).withOpacity(0.9),
-                  Color(0xFFFFC107).withOpacity(0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Achievement icon
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '🏆',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ),
-                SizedBox(width: 12),
-                // Achievement text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Achievement Unlocked!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1, 1),
-                              blurRadius: 2,
-                              color: Colors.black.withOpacity(0.5),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        objective,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1, 1),
-                              blurRadius: 2,
-                              color: Colors.black.withOpacity(0.3),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 }
 
 class GameCanvas extends StatefulWidget {

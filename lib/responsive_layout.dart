@@ -61,12 +61,15 @@ class ResponsiveLayout {
         scaleFactor = baseDimension / 768.0; // Base reference size for tablets
         break;
       case DeviceType.desktop:
-        scaleFactor = baseDimension / 1024.0; // Base reference size for desktop
+        // For desktop, use a more generous scaling to keep text readable
+        scaleFactor = (baseDimension / 800.0).clamp(1.2, 2.0); // Ensure desktop text is never too small
         break;
     }
     
-    // Clamp scale factor to reasonable bounds
-    scaleFactor = scaleFactor.clamp(0.7, 2.0);
+    // Clamp scale factor to reasonable bounds (but allow desktop to be larger)
+    scaleFactor = deviceType == DeviceType.desktop 
+        ? scaleFactor.clamp(1.2, 2.5) 
+        : scaleFactor.clamp(0.7, 2.0);
     
     // Base font sizes that will be scaled
     final baseFontSizes = {
@@ -87,33 +90,35 @@ class ResponsiveLayout {
       double scaledSize = baseSize * scaleFactor;
       
       // Apply minimum and maximum constraints for readability
+      // Use higher minimums for desktop
+      final isDesktop = deviceType == DeviceType.desktop;
       switch (key) {
         case 'title':
-          scaledSize = scaledSize.clamp(18.0, 36.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 24.0 : 18.0, 48.0);
           break;
         case 'subtitle':
-          scaledSize = scaledSize.clamp(12.0, 24.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 16.0 : 12.0, 32.0);
           break;
         case 'body':
-          scaledSize = scaledSize.clamp(8.0, 18.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 12.0 : 8.0, 24.0);
           break;
         case 'caption':
-          scaledSize = scaledSize.clamp(6.0, 14.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 10.0 : 6.0, 18.0);
           break;
         case 'gameOver':
-          scaledSize = scaledSize.clamp(32.0, 72.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 48.0 : 32.0, 96.0);
           break;
         case 'pause':
-          scaledSize = scaledSize.clamp(32.0, 72.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 48.0 : 32.0, 96.0);
           break;
         case 'score':
-          scaledSize = scaledSize.clamp(14.0, 32.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 20.0 : 14.0, 40.0);
           break;
         case 'instructions':
-          scaledSize = scaledSize.clamp(8.0, 18.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 12.0 : 8.0, 24.0);
           break;
         case 'header':
-          scaledSize = scaledSize.clamp(20.0, 42.0);
+          scaledSize = scaledSize.clamp(isDesktop ? 28.0 : 20.0, 56.0);
           break;
       }
       

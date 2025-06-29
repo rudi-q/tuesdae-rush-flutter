@@ -539,7 +539,7 @@ class GameState {
       y: gameHeight / 2 - 50,
       text: '$objectiveName: +$bonus',
       timer: 180,
-      color: Color(0xFFFFD700),
+      color: Color(0xFF4CAF50), // Green for achievements to distinguish from regular scores
     ));
   }
 
