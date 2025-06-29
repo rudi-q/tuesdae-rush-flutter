@@ -13,7 +13,6 @@ dependencies:
   audioplayers: ^6.1.0
   firebase_core: ^2.24.2
   firebase_analytics: ^10.7.4
-  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:

@@ -5,8 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:io' show Platform;
 
 import 'audio_manager.dart';
 import 'game_painter.dart';
@@ -18,19 +16,6 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load environment variables with platform environment fallback
-  try {
-    await dotenv.load(fileName: ".env", mergeWith: Platform.environment);
-    if (kDebugMode) {
-      print('Environment variables loaded with platform fallback');
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print('No .env file found, using platform environment only: $e');
-    }
-    // Initialize with platform environment variables only
-    dotenv.testLoad(fileInput: '', mergeWith: Platform.environment);
-  }
   
   // Initialize Firebase with proper error handling
   try {

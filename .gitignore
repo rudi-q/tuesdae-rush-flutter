@@ -10,19 +10,15 @@
 .svn/
 migrate_working_dir/
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-
 # Firebase configuration files (contain sensitive data)
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 web/firebase-config.js
 macos/Runner/GoogleService-Info.plist
-windows/runner/firebase_options.dart
 .swiftpm/
-migrate_working_dir/
+.firebase
+firebase.json
+.firebaserc
 
 # IntelliJ related
 *.iml
@@ -38,6 +34,9 @@ migrate_working_dir/
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugins.cmake
+**/macos/Flutter/GeneratedPluginRegistrant.swift
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
