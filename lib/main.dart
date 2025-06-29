@@ -1,18 +1,18 @@
 import 'dart:ui' as ui;
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter/foundation.dart';
 
+import 'analytics_service.dart';
 import 'audio_manager.dart';
+import 'firebase_options.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
 import 'mobile_manager.dart';
 import 'responsive_layout.dart';
-import 'analytics_service.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

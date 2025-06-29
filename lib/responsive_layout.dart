@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'mobile_manager.dart';
 
 enum DeviceType { phone, tablet, desktop }

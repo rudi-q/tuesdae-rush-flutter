@@ -11,8 +11,8 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   audioplayers: ^6.1.0
-  firebase_core: ^2.24.2
-  firebase_analytics: ^10.7.4
+  firebase_core: ^3.14.0
+  firebase_analytics: ^11.5.0
 
 dev_dependencies:
   flutter_test:
