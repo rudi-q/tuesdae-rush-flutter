@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'analytics_service.dart';
 import 'audio_manager.dart';
 
 enum Direction { north, south, east, west }
@@ -165,8 +166,17 @@ class GameState {
       if (cars[i].isOffScreen(gameWidth, gameHeight)) {
         if (cars[i].hasPassedIntersection) {
           int points = getDifficultyMultiplier().round();
+          int oldScore = score;
           score += points;
           totalCarsPassed++;
+          
+          // Track score milestones
+          _checkScoreMilestones(oldScore, score);
+          
+          // Track cars passed milestones
+          if (totalCarsPassed % 25 == 0) {
+            AnalyticsService.logCarsPassed(totalCarsPassed);
+          }
           
           // Play car passed sound
           AudioManager().playCarPassed();
@@ -526,6 +536,9 @@ class GameState {
   void _awardObjectiveBonus(String objectiveName, int bonus) {
     score += bonus;
     
+    // Track objective completion analytics
+    AnalyticsService.logObjectiveCompleted(objectiveName);
+    
     // Play special achievement sound
     AudioManager().playPerfectFlow();
     
@@ -547,12 +560,14 @@ class GameState {
     if (waitingCars >= 7) {
       isGameOver = true;
       gameOverReason = 'Too many cars waiting! ($waitingCars cars)';
+      _trackGameOverAnalytics('traffic_jam');
       return;
     }
 
     if (successRate < 70 && totalCarsCrashed > 5) {
       isGameOver = true;
       gameOverReason = 'Poor performance! ($successRate% success, $totalCarsCrashed crashes)';
+      _trackGameOverAnalytics('poor_performance');
       return;
     }
   }
@@ -648,6 +663,27 @@ class GameState {
 
   double getDifficultyMultiplier() {
     return difficultySettings[currentDifficulty]!.scoreMultiplier;
+  }
+
+  // Analytics helper methods
+  void _checkScoreMilestones(int oldScore, int newScore) {
+    List<int> milestones = [100, 250, 500, 1000, 2000, 5000, 10000];
+    
+    for (int milestone in milestones) {
+      if (oldScore < milestone && newScore >= milestone) {
+        AnalyticsService.logScoreMilestone(milestone);
+      }
+    }
+  }
+
+  void _trackGameOverAnalytics(String reason) {
+    AnalyticsService.logGameOver(
+      reason,
+      score,
+      totalCarsPassed,
+      totalCarsCrashed,
+      getSuccessRate().toDouble(),
+    );
   }
 }
 

@@ -2,12 +2,48 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'audio_manager.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
+import 'analytics_service.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+    if (kDebugMode) {
+      print('Environment variables loaded successfully');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Failed to load .env file: $e');
+      print('Continuing with fallback values...');
+    }
+  }
+  
+  // Initialize Firebase with proper error handling
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (kDebugMode) {
+      print('Firebase initialized successfully');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Firebase initialization failed: $e');
+      print('Continuing without Firebase for development');
+    }
+  }
+  
   runApp(TuesdaeRushApp());
 }
 
@@ -16,6 +52,9 @@ class TuesdaeRushApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get analytics instance safely
+    final analytics = AnalyticsService.analytics;
+    
     return MaterialApp(
       title: 'Tuesdae Rush - Traffic Control Game',
       theme: ThemeData(
@@ -24,6 +63,9 @@ class TuesdaeRushApp extends StatelessWidget {
       ),
       home: TuesdaeRushGame(),
       debugShowCheckedModeBanner: false,
+      navigatorObservers: analytics != null ? [
+        FirebaseAnalyticsObserver(analytics: analytics),
+      ] : [],
     );
   }
 }
@@ -333,6 +375,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             onTap: () {
               setState(() {
                 isDarkMode = !isDarkMode;
+                AnalyticsService.logThemeToggle(isDarkMode);
               });
             },
           ),
@@ -342,6 +385,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             onTap: () {
               setState(() {
                 isFullscreen = !isFullscreen;
+                AnalyticsService.logFullscreenToggle(isFullscreen);
               });
             },
           ),
@@ -351,6 +395,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             onTap: () {
               setState(() {
                 audioManager.setSoundEnabled(!audioManager.soundEnabled);
+                AnalyticsService.logAudioToggle(audioManager.soundEnabled);
               });
             },
           ),
@@ -438,43 +483,58 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         case 'Arrow Up':
           gameState.toggleTrafficLight(Direction.north);
           audioManager.playTrafficLightSwitch();
+          AnalyticsService.logTrafficLightToggle('north');
           break;
         case 'Arrow Down':
           gameState.toggleTrafficLight(Direction.south);
           audioManager.playTrafficLightSwitch();
+          AnalyticsService.logTrafficLightToggle('south');
           break;
         case 'Arrow Right':
           gameState.toggleTrafficLight(Direction.east);
           audioManager.playTrafficLightSwitch();
+          AnalyticsService.logTrafficLightToggle('east');
           break;
         case 'Arrow Left':
           gameState.toggleTrafficLight(Direction.west);
           audioManager.playTrafficLightSwitch();
+          AnalyticsService.logTrafficLightToggle('west');
           break;
         case '1':
           gameState.changeDifficulty(Difficulty.easy);
+          AnalyticsService.logDifficultyChange('easy');
           break;
         case '2':
           gameState.changeDifficulty(Difficulty.medium);
+          AnalyticsService.logDifficultyChange('medium');
           break;
         case '3':
           gameState.changeDifficulty(Difficulty.hard);
+          AnalyticsService.logDifficultyChange('hard');
           break;
         case '4':
           gameState.changeDifficulty(Difficulty.extreme);
+          AnalyticsService.logDifficultyChange('extreme');
           break;
         case '5':
           gameState.changeDifficulty(Difficulty.insane);
+          AnalyticsService.logDifficultyChange('insane');
           break;
         case 'Space':
         case 'Escape':
           if (!gameState.gameStarted) {
             setState(() {
               gameState.startGame();
+              AnalyticsService.logGameStart();
             });
           } else {
             setState(() {
               gameState.togglePause();
+              if (gameState.isPaused) {
+                AnalyticsService.logGamePause();
+              } else {
+                AnalyticsService.logGameResume();
+              }
             });
           }
           break;
@@ -483,6 +543,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           if (gameState.isGameOver) {
             setState(() {
               gameState.restart();
+              AnalyticsService.logGameRestart();
             });
           }
           break;
@@ -490,6 +551,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         case 'S':
           setState(() {
             audioManager.setSoundEnabled(!audioManager.soundEnabled);
+            AnalyticsService.logAudioToggle(audioManager.soundEnabled);
           });
           break;
       }
@@ -737,6 +799,7 @@ class GameCanvasState extends State<GameCanvas> {
               onTap: () {
                 widget.gameState.toggleTrafficLight(touchArea.direction);
                 AudioManager().playTrafficLightSwitch();
+                AnalyticsService.logTrafficLightToggle(touchArea.direction.name);
               },
               child: Container(
                 color: Colors.transparent,

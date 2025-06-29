@@ -1,4 +1,4 @@
-package com.example.tuesdae_rush
+package games.tuesdae.tuesdae_rush
 
 import io.flutter.embedding.android.FlutterActivity
 

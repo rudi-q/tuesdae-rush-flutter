@@ -5,10 +5,22 @@
 *.swp
 .DS_Store
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
+migrate_working_dir/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Firebase configuration files (contain sensitive data)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+web/firebase-config.js
+macos/Runner/GoogleService-Info.plist
+windows/runner/firebase_options.dart
 .swiftpm/
 migrate_working_dir/
 
