@@ -25,9 +25,11 @@ void main() async {
     }
   } catch (e) {
     if (kDebugMode) {
-      print('Failed to load .env file: $e');
-      print('Continuing with fallback values...');
+      print('No .env file found (normal for production): $e');
+      print('Using platform environment variables');
     }
+    // Initialize empty dotenv for production deployments
+    dotenv.testLoad(fileInput: '');
   }
   
   // Initialize Firebase with proper error handling

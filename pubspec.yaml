@@ -28,7 +28,6 @@ flutter:
       - assets/images/grass_texture.jpg
       - assets/images/tuesdae_rush_cover.jpg
       - assets/audio/
-      - .env
 
 flutter_launcher_icons:
   windows:
