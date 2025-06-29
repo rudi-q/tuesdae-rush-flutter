@@ -41,26 +41,39 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // Helper method to get environment variable with platform fallback
+  // Helper method to get environment variable with proper fallback chain
   static String _getEnvVar(String key, String fallback) {
-    // Try dotenv first, then platform environment variables, then fallback
-    return dotenv.env[key] ?? 
-           String.fromEnvironment(key, defaultValue: fallback);
+    if (kIsWeb) {
+      // Web: Only use compile-time environment (--dart-define)
+      return String.fromEnvironment(key, defaultValue: fallback);
+    } else {
+      // Native: Try compile-time first, then dotenv, then fallback
+      String compileTimeValue = String.fromEnvironment(key, defaultValue: '');
+      if (compileTimeValue.isNotEmpty) {
+        return compileTimeValue;
+      }
+      
+      String? dotenvValue = dotenv.env[key];
+      if (dotenvValue != null && dotenvValue.isNotEmpty && !dotenvValue.endsWith('_NOT_SET')) {
+        return dotenvValue;
+      }
+      
+      return fallback;
+    }
   }
   
-  // Shared environment variables
-  static String get _messagingSenderId => _getEnvVar('FIREBASE_MESSAGING_SENDER_ID', 'MESSAGING_SENDER_ID_NOT_SET');
-  static String get _projectId => _getEnvVar('FIREBASE_PROJECT_ID', 'PROJECT_ID_NOT_SET');
-  static String get _storageBucket => _getEnvVar('FIREBASE_STORAGE_BUCKET', 'STORAGE_BUCKET_NOT_SET');
-  static String get _authDomain => _getEnvVar('FIREBASE_AUTH_DOMAIN', 'AUTH_DOMAIN_NOT_SET');
+  // Web platform: Use String.fromEnvironment directly (const-compatible)
+  static const String _webApiKey = String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: 'WEB_API_KEY_NOT_SET');
+  static const String _webAppId = String.fromEnvironment('FIREBASE_WEB_APP_ID', defaultValue: 'WEB_APP_ID_NOT_SET');
+  static const String _messagingSenderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID', defaultValue: 'MESSAGING_SENDER_ID_NOT_SET');
+  static const String _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID', defaultValue: 'PROJECT_ID_NOT_SET');
+  static const String _storageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET', defaultValue: 'STORAGE_BUCKET_NOT_SET');
+  static const String _authDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN', defaultValue: 'AUTH_DOMAIN_NOT_SET');
+  static const String _measurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID', defaultValue: 'MEASUREMENT_ID_NOT_SET');
   
-  // Platform-specific environment variables
+  // Native platform environment variables (still use getters for .env fallback)
   static String get _androidApiKey => _getEnvVar('FIREBASE_ANDROID_API_KEY', 'ANDROID_API_KEY_NOT_SET');
   static String get _androidAppId => _getEnvVar('FIREBASE_ANDROID_APP_ID', 'ANDROID_APP_ID_NOT_SET');
-  
-  static String get _webApiKey => _getEnvVar('FIREBASE_WEB_API_KEY', 'WEB_API_KEY_NOT_SET');
-  static String get _webAppId => _getEnvVar('FIREBASE_WEB_APP_ID', 'WEB_APP_ID_NOT_SET');
-  static String get _measurementId => _getEnvVar('FIREBASE_MEASUREMENT_ID', 'MEASUREMENT_ID_NOT_SET');
   
   static String get _iosApiKey => _getEnvVar('FIREBASE_IOS_API_KEY', 'IOS_API_KEY_NOT_SET');
   static String get _iosAppId => _getEnvVar('FIREBASE_IOS_APP_ID', 'IOS_APP_ID_NOT_SET');

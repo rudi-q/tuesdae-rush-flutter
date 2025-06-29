@@ -18,18 +18,24 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load environment variables with platform environment fallback
-  try {
-    await dotenv.load(fileName: ".env", mergeWith: Platform.environment);
-    if (kDebugMode) {
-      print('Environment variables loaded with platform fallback');
+  // Load environment variables (native platforms only)
+  if (!kIsWeb) {
+    // Native platforms: Use .env file
+    try {
+      await dotenv.load(fileName: ".env", mergeWith: Platform.environment);
+      if (kDebugMode) {
+        print('Environment variables loaded from .env (native)');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('No .env file found, using platform environment: $e');
+      }
+      dotenv.testLoad(fileInput: '', mergeWith: Platform.environment);
     }
-  } catch (e) {
+  } else {
     if (kDebugMode) {
-      print('No .env file found, using platform environment only: $e');
+      print('Web platform: Using String.fromEnvironment for Firebase config');
     }
-    // Initialize with platform environment variables only
-    dotenv.testLoad(fileInput: '', mergeWith: Platform.environment);
   }
   
   // Initialize Firebase with proper error handling
