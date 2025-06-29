@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'audio_manager.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
+import 'mobile_manager.dart';
+import 'responsive_layout.dart';
 
 void main() {
   runApp(TuesdaeRushApp());
@@ -41,6 +43,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   late AnimationController _gameLoopController;
   late GameState gameState;
   late AudioManager audioManager;
+  late MobileManager mobileManager;
+  late FocusNode _focusNode;
+  bool isDarkMode = true;
   bool isFullscreen = false;
   bool showInstructions = true;
   List<String> recentObjectives = [];
@@ -49,8 +54,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   void initState() {
     super.initState();
 
+    _focusNode = FocusNode();
     gameState = GameState();
     audioManager = AudioManager();
+    mobileManager = MobileManager();
 
     // 60 FPS game loop
     _gameLoopController = AnimationController(
@@ -60,9 +67,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
     _gameLoopController.addListener(_gameLoop);
 
-    // Initialize game and audio
+    // Initialize game, audio, and mobile features
     gameState.initialize();
     audioManager.initialize();
+    mobileManager.initialize();
   }
 
   void _gameLoop() {
@@ -97,11 +105,13 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF031926),
-      body: KeyboardListener(
-        focusNode: FocusNode(),
+      backgroundColor: isDarkMode ? Color(0xFF031926) : Color(0xFF77ACA2),
+      body: Focus(
+        focusNode: _focusNode,
         autofocus: true,
-        onKeyEvent: _handleKeyPress,
+        onKeyEvent: (FocusNode node, KeyEvent event) {
+          return _handleKeyEvent(event);
+        },
         child: Stack(
           children: [
             // Game Canvas
@@ -119,7 +129,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             _buildScorePanel(),
             // Hide objectives panel on mobile devices
             if (!_isMobile(context)) _buildObjectivesPanel(),
-            // Hide controls panel on mobile devices
+            // Hide controls panel on mobile devices  
             if (!_isMobile(context)) _buildControlsPanel(),
             if (showInstructions) _buildInstructions(),
             _buildBottomControls(),
@@ -145,14 +155,24 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   Widget _buildHeader() {
+    final responsive = ResponsiveLayout.instance;
+    final layout = responsive.getUILayout(context);
+    final size = MediaQuery.of(context).size;
+    final topMargin = size.height * 0.02;
+    final padding = responsive.getPadding(context, type: 'panel');
+    
+    if (!layout['headerVisible']) {
+      return SizedBox.shrink();
+    }
+    
     return Positioned(
-      top: 20,
+      top: topMargin,
       left: 0,
       right: 0,
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.all(10),
+            padding: padding,
             decoration: BoxDecoration(
               color: Color(0xFF77ACA2).withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(15),
@@ -160,23 +180,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             ),
             child: Text(
               'Tuesdae Rush',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                shadows: [
-                  Shadow(
-                    offset: Offset(1, 1),
-                    blurRadius: 3,
-                    color: Colors.black.withValues(alpha: 0.5),
-                  ),
-                ],
-              ),
+              style: responsive.getTextStyle(context, 'header', fontWeight: FontWeight.bold),
             ),
           ),
-          SizedBox(height: 5),
+          SizedBox(height: responsive.getSpacing(context, type: 'small')),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: padding.horizontal * 0.8, 
+              vertical: padding.vertical * 0.4
+            ),
             decoration: BoxDecoration(
               color: Color(0xFF77ACA2).withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(15),
@@ -184,11 +196,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             ),
             child: Text(
               'Just another Tuesdae traffic scene',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+              style: responsive.getTextStyle(context, 'subtitle').copyWith(fontStyle: FontStyle.italic),
             ),
           ),
         ],
@@ -197,50 +205,41 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   Widget _buildScorePanel() {
+    final responsive = ResponsiveLayout.instance;
+    final layout = responsive.getUILayout(context);
+    final deviceType = responsive.getDeviceType(context);
+    final padding = responsive.getPadding(context, type: 'panel');
+    final opacity = responsive.getPanelOpacity(context);
+    final showCompact = layout['showCompactUI'] ?? false;
+    
     return Positioned(
-      top: 10,
-      left: 10,
+      top: layout['scorePosition']['top'],
+      left: layout['scorePosition']['left'],
       child: Container(
-        padding: EdgeInsets.all(12),
+        constraints: BoxConstraints(
+          maxWidth: layout['panelMaxWidth'],
+        ),
+        padding: padding,
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.6),
+          color: Colors.black.withValues(alpha: opacity),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Score: ${gameState.score}',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Difficulty: ${gameState.currentDifficulty.name}',
-              style: TextStyle(color: gameState.getDifficultyColor(), fontSize: 14),
-            ),
-            Text(
-              'Score Multiplier: x${gameState.getDifficultyMultiplier()}',
-              style: TextStyle(color: Color(0xFFFFFF96), fontSize: 12),
-            ),
-            Text(
-              'Cars Passed: ${gameState.totalCarsPassed}',
-              style: TextStyle(color: Color(0xFFC8FFC8), fontSize: 12),
-            ),
-            Text(
-              'Cars Spawned: ${gameState.totalCarsSpawned}',
-              style: TextStyle(color: Color(0xFFC8FFC8), fontSize: 12),
-            ),
-            Text(
-              'Cars Crashed: ${gameState.totalCarsCrashed}',
-              style: TextStyle(color: Color(0xFFFF9696), fontSize: 12),
-            ),
-            Text(
-              'Cars Waiting: ${gameState.getWaitingCarsCount()}',
-              style: TextStyle(color: Color(0xFFFFC864), fontSize: 12),
-            ),
-            Text(
-              'Success Rate: ${gameState.getSuccessRate()}%',
-              style: TextStyle(color: Colors.yellow, fontSize: 12),
-            ),
+            if (!showCompact) ...[
+              Text('Score: ${gameState.score}', style: responsive.getTextStyle(context, 'score', fontWeight: FontWeight.bold)),
+              Text('Difficulty: ${gameState.currentDifficulty.name}', style: responsive.getTextStyle(context, 'body', color: gameState.getDifficultyColor())),
+              Text('Multiplier: x${gameState.getDifficultyMultiplier()}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFFFFF96))),
+              Text('Cars: ${gameState.totalCarsPassed}/${gameState.totalCarsSpawned}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFC8FFC8))),
+              Text('Crashed: ${gameState.totalCarsCrashed}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFFF9696))),
+              Text('Waiting: ${gameState.getWaitingCarsCount()}', style: responsive.getTextStyle(context, 'caption', color: Color(0xFFFFC864))),
+              Text('Success: ${gameState.getSuccessRate()}%', style: responsive.getTextStyle(context, 'caption', color: Colors.yellow)),
+            ],
+            if (showCompact || deviceType == DeviceType.phone) ...[
+              Text('Score: ${gameState.score}', style: responsive.getTextStyle(context, 'score', fontWeight: FontWeight.bold)),
+            ]
           ],
         ),
       ),
@@ -248,66 +247,106 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   Widget _buildObjectivesPanel() {
+    final responsive = ResponsiveLayout.instance;
+    final layout = responsive.getUILayout(context);
+    final padding = responsive.getPadding(context, type: 'panel');
+    final opacity = responsive.getPanelOpacity(context);
+    final showCompact = layout['showCompactUI'] ?? false;
+    final deviceType = responsive.getDeviceType(context);
+    
     return Positioned(
-      top: 10,
-      right: 10,
+      top: layout['objectivesPosition']['top'],
+      right: layout['objectivesPosition'].containsKey('right') ? layout['objectivesPosition']['right'] : null,
+      left: layout['objectivesPosition'].containsKey('left') ? layout['objectivesPosition']['left'] : null,
       child: Container(
-        padding: EdgeInsets.all(12),
+        constraints: BoxConstraints(
+          maxWidth: layout['panelMaxWidth'],
+        ),
+        padding: padding,
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.6),
+          color: Colors.black.withValues(alpha: opacity),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Objectives',
-              style: TextStyle(color: Color(0xFFFFC107), fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-                          ...gameState.objectives.entries.map((entry) {
+            if (!showCompact) ...[
+              Text(
+                'Objectives',
+                style: responsive.getTextStyle(context, 'subtitle', color: Color(0xFFFFC107), fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: responsive.getSpacing(context, type: 'small')),
+              ...gameState.objectives.entries.take(6).map((entry) {
                 bool completed = gameState.objectivesCompleted[entry.key] ?? false;
-                return Text(
-                  '${completed ? "✓" : "•"} ${_getObjectiveText(entry.key, entry.value)}',
-                  style: TextStyle(
-                    color: completed ? Color(0xFF4CAF50) : Colors.grey,
-                    fontSize: 12,
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '${completed ? "✓" : "•"} ${_getObjectiveText(entry.key, entry.value, showCompact)}',
+                    style: responsive.getTextStyle(
+                      context, 
+                      'caption', 
+                      color: completed ? Color(0xFF4CAF50) : Colors.grey
+                    ),
+                    maxLines: showCompact ? 1 : 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 );
-            }),
+              }),
+            ],
+            if (showCompact || deviceType == DeviceType.phone) ...[
+              Text(
+                'Objectives',
+                style: responsive.getTextStyle(context, 'subtitle', color: Color(0xFFFFC107), fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: responsive.getSpacing(context, type: 'small')),
+            ]
           ],
         ),
       ),
     );
   }
 
-  String _getObjectiveText(String key, bool completed) {
+  String _getObjectiveText(String key, bool completed, [bool compact = false]) {
     switch (key) {
       case 'pass_20_cars':
-        return 'Pass 20 cars ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : ""}';
+        return compact ? 'Pass 20 cars' : 'Pass 20 cars ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : ""}';
       case 'zero_crashes':
-        return 'Perfect safety (10+ cars) ${gameState.totalCarsPassed < 10 ? "(${gameState.totalCarsPassed}/10)" : ""}';
+        return compact ? 'Perfect safety' : 'Perfect safety (10+ cars) ${gameState.totalCarsPassed < 10 ? "(${gameState.totalCarsPassed}/10)" : ""}';
       case 'pass_50_cars':
-        return 'Pass 50 cars ${gameState.totalCarsPassed < 50 ? "(${gameState.totalCarsPassed}/50)" : ""}';
+        return compact ? 'Pass 50 cars' : 'Pass 50 cars ${gameState.totalCarsPassed < 50 ? "(${gameState.totalCarsPassed}/50)" : ""}';
       case 'efficiency_85':
-        return '85% efficiency (20+ cars) ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : "(${gameState.getSuccessRate()}/85)"}';
+        return compact ? '85% efficiency' : '85% efficiency (20+ cars) ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : "(${gameState.getSuccessRate()}/85)"}';
       case 'pass_100_cars':
-        return 'Pass 100 cars ${gameState.totalCarsPassed < 100 ? "(${gameState.totalCarsPassed}/100)" : ""}';
+        return compact ? 'Pass 100 cars' : 'Pass 100 cars ${gameState.totalCarsPassed < 100 ? "(${gameState.totalCarsPassed}/100)" : ""}';
       case 'no_traffic_jams':
-        return 'Traffic master (30+ cars) ${gameState.totalCarsPassed < 30 ? "(${gameState.totalCarsPassed}/30)" : ""}';
+        return compact ? 'Traffic master' : 'Traffic master (30+ cars) ${gameState.totalCarsPassed < 30 ? "(${gameState.totalCarsPassed}/30)" : ""}';
       default:
         return key;
     }
   }
 
   Widget _buildControlsPanel() {
+    final responsive = ResponsiveLayout.instance;
+    final layout = responsive.getUILayout(context);
+    final padding = responsive.getPadding(context, type: 'panel');
+    final opacity = responsive.getPanelOpacity(context);
+    final showCompact = layout['showCompactUI'] ?? false;
+    
+    if (!layout['instructionsVisible']) {
+      return SizedBox.shrink(); // Hide on very small screens
+    }
+    
     return Positioned(
-      bottom: 10,
-      left: 10,
+      bottom: layout['controlsPosition']['bottom'],
+      left: layout['controlsPosition']['left'],
       child: Container(
-        padding: EdgeInsets.all(8),
+        constraints: BoxConstraints(
+          maxWidth: layout['panelMaxWidth'],
+        ),
+        padding: padding,
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.6),
+          color: Colors.black.withValues(alpha: opacity),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -315,14 +354,12 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           children: [
             Text(
               'Controls',
-              style: TextStyle(color: Color(0xFFFFC107), fontSize: 14, fontWeight: FontWeight.bold),
+              style: responsive.getTextStyle(context, 'subtitle', color: Color(0xFFFFC107), fontWeight: FontWeight.bold),
             ),
-            Text('Arrow Keys: Traffic Lights', style: TextStyle(color: Colors.white, fontSize: 10)),
-            Text('Space bar: Pause/Resume', style: TextStyle(color: Colors.white, fontSize: 10)),
-            Text('1-5 Keys: Change Difficulty', style: TextStyle(color: Colors.white, fontSize: 10)),
-            Text('S Key: Toggle Audio', style: TextStyle(color: Colors.white, fontSize: 10)),
-            Text('R Key: Restart (Game Over)', style: TextStyle(color: Colors.white, fontSize: 10)),
-            Text('Tap: Toggle Lights', style: TextStyle(color: Colors.white, fontSize: 10)),
+            if (!showCompact) Text('Arrow Keys: Traffic Lights', style: responsive.getTextStyle(context, 'caption')),
+            if (!showCompact) Text('Space bar: Pause/Resume', style: responsive.getTextStyle(context, 'caption')),
+            if (!showCompact) Text('1-5 Keys: Change Difficulty', style: responsive.getTextStyle(context, 'caption')),
+            Text('Tap: Toggle Lights', style: responsive.getTextStyle(context, 'caption')),
           ],
         ),
       ),
@@ -352,9 +389,14 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   Widget _buildBottomControls() {
+    final responsive = ResponsiveLayout.instance;
+    final layout = responsive.getUILayout(context);
+    final size = MediaQuery.of(context).size;
+    final sideMargin = size.width * 0.02;
+    
     return Positioned(
-      bottom: 20,
-      right: 20,
+      bottom: layout['bottomControlsPosition']['bottom'],
+      right: sideMargin,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -368,7 +410,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                 });
               },
             ),
-            SizedBox(width: 10),
+            SizedBox(width: 8),
           ],
           _buildControlButton(
             icon: isFullscreen ? '⛷' : '⛶',
@@ -376,15 +418,27 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               setState(() {
                 isFullscreen = !isFullscreen;
               });
+              mobileManager.selectionHaptic();
             },
           ),
-          SizedBox(width: 10),
+          SizedBox(width: 8),
+          _buildControlButton(
+            icon: isDarkMode ? '🌙' : '☀️',
+            onTap: () {
+              setState(() {
+                isDarkMode = !isDarkMode;
+              });
+              mobileManager.selectionHaptic();
+            },
+          ),
+          SizedBox(width: 8),
           _buildControlButton(
             icon: audioManager.soundEnabled ? '🔊' : '🔇',
             onTap: () {
               setState(() {
                 audioManager.setSoundEnabled(!audioManager.soundEnabled);
               });
+              mobileManager.selectionHaptic();
             },
           ),
         ],
@@ -411,102 +465,38 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   Widget _buildGameOverOverlay() {
+    final responsive = ResponsiveLayout.instance;
+    
     return Positioned.fill(
-      child: Container(
-        color: Color(0xFF1E3264).withValues(alpha: 0.8),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'GAME OVER',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black),
-                  ],
+      child: GestureDetector(
+        onTap: gameState.isGameOver ? () {
+          setState(() {
+            gameState.restart();
+            recentObjectives.clear(); // Clear mobile notifications on restart
+          });
+        } : null,
+        child: Container(
+          color: Color(0xFF1E3264).withValues(alpha: 0.8),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'GAME OVER',
+                  style: responsive.getTextStyle(context, 'gameOver', color: Colors.red, fontWeight: FontWeight.bold),
                 ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Score: ${gameState.score}',
-                style: TextStyle(color: Colors.white, fontSize: 32),
-              ),
-              SizedBox(height: 10),
-              Text(
-                gameState.gameOverReason,
-                style: TextStyle(color: Colors.white, fontSize: 24),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 40),
-              // Mobile-friendly restart button
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    gameState.restart();
-                    recentObjectives.clear(); // Clear mobile notifications on restart
-                  });
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF4CAF50),
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.refresh,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'RESTART',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                SizedBox(height: responsive.getSpacing(context, type: 'medium')),
+                Text(
+                  gameState.gameOverReason,
+                  style: responsive.getTextStyle(context, 'title'),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Tap button above or press R to restart',
-                style: TextStyle(color: Color(0xFFFFFF64), fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPauseOverlay() {
-    return Positioned.fill(
-      child: Container(
-        color: Colors.white.withValues(alpha: 0.7),
-        child: Center(
-          child: Text(
-            'PAUSED',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
+                SizedBox(height: responsive.getSpacing(context, type: 'large')),
+                Text(
+                  'Press R or tap screen to restart',
+                  style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFFF64)),
+                ),
+              ],
             ),
           ),
         ),
@@ -514,67 +504,106 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
-  void _handleKeyPress(KeyEvent event) {
+  Widget _buildPauseOverlay() {
+    final responsive = ResponsiveLayout.instance;
+    
+    return Positioned.fill(
+      child: Container(
+        color: Colors.white.withValues(alpha: 0.7),
+        child: Center(
+          child: Text(
+            'PAUSED',
+            style: responsive.getTextStyle(context, 'pause', color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
+  KeyEventResult _handleKeyEvent(KeyEvent event) {
     if (event is KeyDownEvent) {
-      switch (event.logicalKey) {
-        case LogicalKeyboardKey.arrowUp:
+      final key = event.logicalKey;
+      
+      if (key == LogicalKeyboardKey.arrowUp) {
+        setState(() {
           gameState.toggleTrafficLight(Direction.north);
           audioManager.playTrafficLightSwitch();
-          break;
-        case LogicalKeyboardKey.arrowDown:
+          mobileManager.lightHaptic();
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.arrowDown) {
+        setState(() {
           gameState.toggleTrafficLight(Direction.south);
           audioManager.playTrafficLightSwitch();
-          break;
-        case LogicalKeyboardKey.arrowRight:
+          mobileManager.lightHaptic();
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.arrowRight) {
+        setState(() {
           gameState.toggleTrafficLight(Direction.east);
           audioManager.playTrafficLightSwitch();
-          break;
-        case LogicalKeyboardKey.arrowLeft:
+          mobileManager.lightHaptic();
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.arrowLeft) {
+        setState(() {
           gameState.toggleTrafficLight(Direction.west);
           audioManager.playTrafficLightSwitch();
-          break;
-        case LogicalKeyboardKey.digit1:
+          mobileManager.lightHaptic();
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.digit1) {
+        setState(() {
           gameState.changeDifficulty(Difficulty.easy);
-          break;
-        case LogicalKeyboardKey.digit2:
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.digit2) {
+        setState(() {
           gameState.changeDifficulty(Difficulty.medium);
-          break;
-        case LogicalKeyboardKey.digit3:
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.digit3) {
+        setState(() {
           gameState.changeDifficulty(Difficulty.hard);
-          break;
-        case LogicalKeyboardKey.digit4:
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.digit4) {
+        setState(() {
           gameState.changeDifficulty(Difficulty.extreme);
-          break;
-        case LogicalKeyboardKey.digit5:
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.digit5) {
+        setState(() {
           gameState.changeDifficulty(Difficulty.insane);
-          break;
-        case LogicalKeyboardKey.space:
-        case LogicalKeyboardKey.escape:
-          if (!gameState.gameStarted) {
-            setState(() {
-              gameState.startGame();
-            });
-          } else {
-            setState(() {
-              gameState.togglePause();
-            });
-          }
-          break;
-        case LogicalKeyboardKey.keyR:
-          if (gameState.isGameOver) {
-            setState(() {
-              gameState.restart();
-              recentObjectives.clear(); // Clear mobile notifications on restart
-            });
-          }
-          break;
-        case LogicalKeyboardKey.keyS:
+        });
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.escape) {
+        if (!gameState.gameStarted) {
           setState(() {
-            audioManager.setSoundEnabled(!audioManager.soundEnabled);
+            gameState.startGame();
           });
-          break;
+        } else {
+          setState(() {
+            gameState.togglePause();
+          });
+        }
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.keyR) {
+        if (gameState.isGameOver) {
+          setState(() {
+            gameState.restart();
+            recentObjectives.clear(); // Clear mobile notifications on restart
+          });
+        }
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.keyS) {
+        setState(() {
+          audioManager.setSoundEnabled(!audioManager.soundEnabled);
+        });
+        return KeyEventResult.handled;
       }
     }
+    return KeyEventResult.ignored;
   }
 
   Widget _buildStartScreen() {
@@ -756,6 +785,14 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
+  @override
+  void dispose() {
+    _gameLoopController.dispose();
+    _focusNode.dispose();
+    audioManager.dispose();
+    super.dispose();
+  }
+
   // Helper method to detect mobile devices
   bool _isMobile(BuildContext context) {
     // Use screen width to detect mobile devices
@@ -775,8 +812,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           });
         },
       ),
-         );
-   }
+    );
+  }
 
   Widget _buildMobileObjectiveNotifications() {
     if (recentObjectives.isEmpty) {
@@ -872,13 +909,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       ),
     );
   }
-
-  @override
-  void dispose() {
-    _gameLoopController.dispose();
-    audioManager.dispose();
-    super.dispose();
-  }
 }
 
 class GameCanvas extends StatefulWidget {
@@ -935,6 +965,7 @@ class GameCanvasState extends State<GameCanvas> {
               onTap: () {
                 widget.gameState.toggleTrafficLight(touchArea.direction);
                 AudioManager().playTrafficLightSwitch();
+                MobileManager().lightHaptic();
               },
               child: Container(
                 color: Colors.transparent,
