@@ -41,28 +41,35 @@ class DefaultFirebaseOptions {
     }
   }
 
+  // Helper method to get environment variable with platform fallback
+  static String _getEnvVar(String key, String fallback) {
+    // Try dotenv first, then platform environment variables, then fallback
+    return dotenv.env[key] ?? 
+           String.fromEnvironment(key, defaultValue: fallback);
+  }
+  
   // Shared environment variables
-  static String get _messagingSenderId => dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'MESSAGING_SENDER_ID_NOT_SET';
-  static String get _projectId => dotenv.env['FIREBASE_PROJECT_ID'] ?? 'PROJECT_ID_NOT_SET';
-  static String get _storageBucket => dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'STORAGE_BUCKET_NOT_SET';
-  static String get _authDomain => dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? 'AUTH_DOMAIN_NOT_SET';
+  static String get _messagingSenderId => _getEnvVar('FIREBASE_MESSAGING_SENDER_ID', 'MESSAGING_SENDER_ID_NOT_SET');
+  static String get _projectId => _getEnvVar('FIREBASE_PROJECT_ID', 'PROJECT_ID_NOT_SET');
+  static String get _storageBucket => _getEnvVar('FIREBASE_STORAGE_BUCKET', 'STORAGE_BUCKET_NOT_SET');
+  static String get _authDomain => _getEnvVar('FIREBASE_AUTH_DOMAIN', 'AUTH_DOMAIN_NOT_SET');
   
   // Platform-specific environment variables
-  static String get _androidApiKey => dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? 'ANDROID_API_KEY_NOT_SET';
-  static String get _androidAppId => dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? 'ANDROID_APP_ID_NOT_SET';
+  static String get _androidApiKey => _getEnvVar('FIREBASE_ANDROID_API_KEY', 'ANDROID_API_KEY_NOT_SET');
+  static String get _androidAppId => _getEnvVar('FIREBASE_ANDROID_APP_ID', 'ANDROID_APP_ID_NOT_SET');
   
-  static String get _webApiKey => dotenv.env['FIREBASE_WEB_API_KEY'] ?? 'WEB_API_KEY_NOT_SET';
-  static String get _webAppId => dotenv.env['FIREBASE_WEB_APP_ID'] ?? 'WEB_APP_ID_NOT_SET';
-  static String get _measurementId => dotenv.env['FIREBASE_MEASUREMENT_ID'] ?? 'MEASUREMENT_ID_NOT_SET';
+  static String get _webApiKey => _getEnvVar('FIREBASE_WEB_API_KEY', 'WEB_API_KEY_NOT_SET');
+  static String get _webAppId => _getEnvVar('FIREBASE_WEB_APP_ID', 'WEB_APP_ID_NOT_SET');
+  static String get _measurementId => _getEnvVar('FIREBASE_MEASUREMENT_ID', 'MEASUREMENT_ID_NOT_SET');
   
-  static String get _iosApiKey => dotenv.env['FIREBASE_IOS_API_KEY'] ?? 'IOS_API_KEY_NOT_SET';
-  static String get _iosAppId => dotenv.env['FIREBASE_IOS_APP_ID'] ?? 'IOS_APP_ID_NOT_SET';
+  static String get _iosApiKey => _getEnvVar('FIREBASE_IOS_API_KEY', 'IOS_API_KEY_NOT_SET');
+  static String get _iosAppId => _getEnvVar('FIREBASE_IOS_APP_ID', 'IOS_APP_ID_NOT_SET');
   
-  static String get _macosApiKey => dotenv.env['FIREBASE_MACOS_API_KEY'] ?? 'MACOS_API_KEY_NOT_SET';
-  static String get _macosAppId => dotenv.env['FIREBASE_MACOS_APP_ID'] ?? 'MACOS_APP_ID_NOT_SET';
+  static String get _macosApiKey => _getEnvVar('FIREBASE_MACOS_API_KEY', 'MACOS_API_KEY_NOT_SET');
+  static String get _macosAppId => _getEnvVar('FIREBASE_MACOS_APP_ID', 'MACOS_APP_ID_NOT_SET');
   
-  static String get _windowsApiKey => dotenv.env['FIREBASE_WINDOWS_API_KEY'] ?? 'WINDOWS_API_KEY_NOT_SET';
-  static String get _windowsAppId => dotenv.env['FIREBASE_WINDOWS_APP_ID'] ?? 'WINDOWS_APP_ID_NOT_SET';
+  static String get _windowsApiKey => _getEnvVar('FIREBASE_WINDOWS_API_KEY', 'WINDOWS_API_KEY_NOT_SET');
+  static String get _windowsAppId => _getEnvVar('FIREBASE_WINDOWS_APP_ID', 'WINDOWS_APP_ID_NOT_SET');
   
   static FirebaseOptions get web => FirebaseOptions(
     apiKey: _webApiKey,
