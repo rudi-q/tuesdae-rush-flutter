@@ -41,8 +41,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   late AnimationController _gameLoopController;
   late GameState gameState;
   late AudioManager audioManager;
-  bool isDarkMode = true;
   bool isFullscreen = false;
+  bool showInstructions = true;
+  List<String> recentObjectives = [];
 
   @override
   void initState() {
@@ -68,18 +69,39 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     if (mounted && !gameState.isPaused && !gameState.isGameOver && gameState.gameStarted) {
       setState(() {
         gameState.update();
+        _checkForNewObjectives();
       });
     }
+  }
+
+  void _checkForNewObjectives() {
+    // Check for newly completed objectives and add to recent list
+    gameState.objectives.entries.forEach((entry) {
+      if (entry.value && gameState.objectivesCompleted[entry.key] == true) {
+        String objectiveName = _getObjectiveText(entry.key, entry.value).split(' (')[0]; // Remove progress text
+        if (!recentObjectives.contains(objectiveName)) {
+          recentObjectives.add(objectiveName);
+          // Remove after 3 seconds
+          Future.delayed(Duration(seconds: 3), () {
+            if (mounted) {
+              setState(() {
+                recentObjectives.remove(objectiveName);
+              });
+            }
+          });
+        }
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: isDarkMode ? Color(0xFF031926) : Color(0xFF77ACA2),
-      body: RawKeyboardListener(
+      backgroundColor: Color(0xFF031926),
+      body: KeyboardListener(
         focusNode: FocusNode(),
         autofocus: true,
-        onKey: _handleKeyPress,
+        onKeyEvent: _handleKeyPress,
         child: Stack(
           children: [
             // Game Canvas
@@ -95,10 +117,18 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             // UI Overlays
             if (!isFullscreen) _buildHeader(),
             _buildScorePanel(),
-            _buildObjectivesPanel(),
-            _buildControlsPanel(),
-            if (!isFullscreen) _buildInstructions(),
+            // Hide objectives panel on mobile devices
+            if (!_isMobile(context)) _buildObjectivesPanel(),
+            // Hide controls panel on mobile devices
+            if (!_isMobile(context)) _buildControlsPanel(),
+            if (showInstructions) _buildInstructions(),
             _buildBottomControls(),
+            
+            // Mobile help button (bottom left)
+            if (_isMobile(context)) _buildMobileHelpButton(),
+            
+            // Mobile objective notifications
+            if (_isMobile(context)) _buildMobileObjectiveNotifications(),
 
             // Game Over Overlay
             if (gameState.isGameOver) _buildGameOverOverlay(),
@@ -235,15 +265,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               style: TextStyle(color: Color(0xFFFFC107), fontSize: 16, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            ...gameState.objectives.entries.map((entry) {
-              bool completed = gameState.objectivesCompleted[entry.key] ?? false;
-              return Text(
-                '${completed ? "✓" : "•"} ${_getObjectiveText(entry.key, entry.value)}',
-                style: TextStyle(
-                  color: completed ? Color(0xFF4CAF50) : Colors.grey,
-                  fontSize: 12,
-                ),
-              );
+                          ...gameState.objectives.entries.map((entry) {
+                bool completed = gameState.objectivesCompleted[entry.key] ?? false;
+                return Text(
+                  '${completed ? "✓" : "•"} ${_getObjectiveText(entry.key, entry.value)}',
+                  style: TextStyle(
+                    color: completed ? Color(0xFF4CAF50) : Colors.grey,
+                    fontSize: 12,
+                  ),
+                );
             }),
           ],
         ),
@@ -312,7 +342,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
-            'Tap traffic lights to control traffic flow • Arrow keys (↑↓←→) to toggle lights | 1/2/3/4/5 to change difficulty | ESC to pause',
+            'Control traffic lights to prevent crashes and traffic jams',
             style: TextStyle(color: Colors.white, fontSize: 11),
             textAlign: TextAlign.center,
           ),
@@ -328,15 +358,18 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildControlButton(
-            icon: isDarkMode ? '🌙' : '☀️',
-            onTap: () {
-              setState(() {
-                isDarkMode = !isDarkMode;
-              });
-            },
-          ),
-          SizedBox(width: 10),
+          // Only show help button on desktop (not mobile)
+          if (!_isMobile(context)) ...[
+            _buildControlButton(
+              icon: '❓',
+              onTap: () {
+                setState(() {
+                  showInstructions = !showInstructions;
+                });
+              },
+            ),
+            SizedBox(width: 10),
+          ],
           _buildControlButton(
             icon: isFullscreen ? '⛷' : '⛶',
             onTap: () {
@@ -398,14 +431,63 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               ),
               SizedBox(height: 20),
               Text(
+                'Score: ${gameState.score}',
+                style: TextStyle(color: Colors.white, fontSize: 32),
+              ),
+              SizedBox(height: 10),
+              Text(
                 gameState.gameOverReason,
                 style: TextStyle(color: Colors.white, fontSize: 24),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 40),
+              // Mobile-friendly restart button
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    gameState.restart();
+                    recentObjectives.clear(); // Clear mobile notifications on restart
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF4CAF50),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'RESTART',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
               Text(
-                'Press R to restart',
-                style: TextStyle(color: Color(0xFFFFFF64), fontSize: 16),
+                'Tap button above or press R to restart',
+                style: TextStyle(color: Color(0xFFFFFF64), fontSize: 14),
               ),
             ],
           ),
@@ -432,42 +514,42 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
-  void _handleKeyPress(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
-      switch (event.logicalKey.keyLabel) {
-        case 'Arrow Up':
+  void _handleKeyPress(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      switch (event.logicalKey) {
+        case LogicalKeyboardKey.arrowUp:
           gameState.toggleTrafficLight(Direction.north);
           audioManager.playTrafficLightSwitch();
           break;
-        case 'Arrow Down':
+        case LogicalKeyboardKey.arrowDown:
           gameState.toggleTrafficLight(Direction.south);
           audioManager.playTrafficLightSwitch();
           break;
-        case 'Arrow Right':
+        case LogicalKeyboardKey.arrowRight:
           gameState.toggleTrafficLight(Direction.east);
           audioManager.playTrafficLightSwitch();
           break;
-        case 'Arrow Left':
+        case LogicalKeyboardKey.arrowLeft:
           gameState.toggleTrafficLight(Direction.west);
           audioManager.playTrafficLightSwitch();
           break;
-        case '1':
+        case LogicalKeyboardKey.digit1:
           gameState.changeDifficulty(Difficulty.easy);
           break;
-        case '2':
+        case LogicalKeyboardKey.digit2:
           gameState.changeDifficulty(Difficulty.medium);
           break;
-        case '3':
+        case LogicalKeyboardKey.digit3:
           gameState.changeDifficulty(Difficulty.hard);
           break;
-        case '4':
+        case LogicalKeyboardKey.digit4:
           gameState.changeDifficulty(Difficulty.extreme);
           break;
-        case '5':
+        case LogicalKeyboardKey.digit5:
           gameState.changeDifficulty(Difficulty.insane);
           break;
-        case 'Space':
-        case 'Escape':
+        case LogicalKeyboardKey.space:
+        case LogicalKeyboardKey.escape:
           if (!gameState.gameStarted) {
             setState(() {
               gameState.startGame();
@@ -478,16 +560,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             });
           }
           break;
-        case 'r':
-        case 'R':
+        case LogicalKeyboardKey.keyR:
           if (gameState.isGameOver) {
             setState(() {
               gameState.restart();
+              recentObjectives.clear(); // Clear mobile notifications on restart
             });
           }
           break;
-        case 's':
-        case 'S':
+        case LogicalKeyboardKey.keyS:
           setState(() {
             audioManager.setSoundEnabled(!audioManager.soundEnabled);
           });
@@ -671,6 +752,123 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper method to detect mobile devices
+  bool _isMobile(BuildContext context) {
+    // Use screen width to detect mobile devices
+    // This works well for both native mobile and mobile browsers
+    return MediaQuery.of(context).size.width < 600;
+  }
+
+  Widget _buildMobileHelpButton() {
+    return Positioned(
+      bottom: 20,
+      left: 20,
+      child: _buildControlButton(
+        icon: '❓',
+        onTap: () {
+          setState(() {
+            showInstructions = !showInstructions;
+          });
+        },
+      ),
+         );
+   }
+
+  Widget _buildMobileObjectiveNotifications() {
+    if (recentObjectives.isEmpty) {
+      return Container();
+    }
+
+    return Positioned(
+      top: 80,
+      left: 20,
+      right: 20,
+      child: Column(
+        children: recentObjectives.map((objective) {
+          return Container(
+            margin: EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFFFD700).withOpacity(0.9),
+                  Color(0xFFFFC107).withOpacity(0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Achievement icon
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '🏆',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+                SizedBox(width: 12),
+                // Achievement text
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Achievement Unlocked!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        objective,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }
