@@ -2,14 +2,48 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'audio_manager.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
 import 'mobile_manager.dart';
 import 'responsive_layout.dart';
+import 'analytics_service.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+    if (kDebugMode) {
+      print('Environment variables loaded successfully');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Failed to load .env file: $e');
+      print('Continuing with fallback values...');
+    }
+  }
+  
+  // Initialize Firebase with proper error handling
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (kDebugMode) {
+      print('Firebase initialized successfully');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Firebase initialization failed: $e');
+      print('Continuing without Firebase for development');
+    }
+  }
   runApp(TuesdaeRushApp());
 }
 
@@ -18,6 +52,9 @@ class TuesdaeRushApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get analytics instance safely
+    final analytics = AnalyticsService.analytics;
+    
     return MaterialApp(
       title: 'Tuesdae Rush - Traffic Control Game',
       theme: ThemeData(
@@ -26,6 +63,9 @@ class TuesdaeRushApp extends StatelessWidget {
       ),
       home: TuesdaeRushGame(),
       debugShowCheckedModeBanner: false,
+      navigatorObservers: analytics != null ? [
+        FirebaseAnalyticsObserver(analytics: analytics),
+      ] : [],
     );
   }
 }
@@ -367,6 +407,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+
           // Only show help button on desktop (not mobile)
           if (!_isMobile(context)) ...[
             _buildControlButton(
@@ -379,11 +420,13 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             ),
             SizedBox(width: 8),
           ],
+
           _buildControlButton(
             icon: isFullscreen ? '⛷' : '⛶',
             onTap: () {
               setState(() {
                 isFullscreen = !isFullscreen;
+                AnalyticsService.logFullscreenToggle(isFullscreen);
               });
               mobileManager.selectionHaptic();
             },
@@ -394,6 +437,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             onTap: () {
               setState(() {
                 audioManager.setSoundEnabled(!audioManager.soundEnabled);
+                AnalyticsService.logAudioToggle(audioManager.soundEnabled);
               });
               mobileManager.selectionHaptic();
             },
@@ -525,14 +569,19 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         setState(() {
           gameState.toggleTrafficLight(Direction.north);
           audioManager.playTrafficLightSwitch();
+          
+          AnalyticsService.logTrafficLightToggle('north');
           mobileManager.lightHaptic();
         });
         return KeyEventResult.handled;
+
       } else if (key == LogicalKeyboardKey.arrowDown) {
         setState(() {
           gameState.toggleTrafficLight(Direction.south);
           audioManager.playTrafficLightSwitch();
           mobileManager.lightHaptic();
+          
+          AnalyticsService.logTrafficLightToggle('south');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.arrowRight) {
@@ -540,6 +589,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           gameState.toggleTrafficLight(Direction.east);
           audioManager.playTrafficLightSwitch();
           mobileManager.lightHaptic();
+          
+          AnalyticsService.logTrafficLightToggle('east');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.arrowLeft) {
@@ -547,41 +598,59 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           gameState.toggleTrafficLight(Direction.west);
           audioManager.playTrafficLightSwitch();
           mobileManager.lightHaptic();
+          
+          AnalyticsService.logTrafficLightToggle('west');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.digit1) {
         setState(() {
           gameState.changeDifficulty(Difficulty.easy);
+          
+          AnalyticsService.logDifficultyChange('easy');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.digit2) {
         setState(() {
           gameState.changeDifficulty(Difficulty.medium);
+          
+          AnalyticsService.logDifficultyChange('medium');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.digit3) {
         setState(() {
           gameState.changeDifficulty(Difficulty.hard);
+          
+          AnalyticsService.logDifficultyChange('hard');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.digit4) {
         setState(() {
           gameState.changeDifficulty(Difficulty.extreme);
+          
+          AnalyticsService.logDifficultyChange('extreme');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.digit5) {
         setState(() {
           gameState.changeDifficulty(Difficulty.insane);
+          
+          AnalyticsService.logDifficultyChange('insane');
         });
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.escape) {
         if (!gameState.gameStarted) {
           setState(() {
             gameState.startGame();
+            AnalyticsService.logGameStart();    
           });
         } else {
           setState(() {
             gameState.togglePause();
+             if (gameState.isPaused) {
+                AnalyticsService.logGamePause();
+              } else {
+                AnalyticsService.logGameResume();
+              }
           });
         }
         return KeyEventResult.handled;
@@ -589,12 +658,14 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         if (gameState.isGameOver) {
           setState(() {
             gameState.restart();
+              AnalyticsService.logGameRestart();
           });
         }
         return KeyEventResult.handled;
       } else if (key == LogicalKeyboardKey.keyS) {
         setState(() {
           audioManager.setSoundEnabled(!audioManager.soundEnabled);
+          AnalyticsService.logAudioToggle(audioManager.soundEnabled);
         });
         return KeyEventResult.handled;
       }
@@ -869,6 +940,7 @@ class GameCanvasState extends State<GameCanvas> {
                 widget.gameState.toggleTrafficLight(touchArea.direction);
                 AudioManager().playTrafficLightSwitch();
                 MobileManager().lightHaptic();
+                AnalyticsService.logTrafficLightToggle(touchArea.direction.name);
               },
               child: Container(
                 color: Colors.transparent,
