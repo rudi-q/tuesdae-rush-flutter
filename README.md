@@ -353,6 +353,37 @@ We welcome contributions! Please read our contributing guidelines:
 | Web | 50-60 | ~30MB | 3-4 seconds |
 | Desktop | 60 | ~40MB | 1-2 seconds |
 
+## 🚗 Tuesdae Assets Package
+[![pub package](https://img.shields.io/pub/v/tuesdae_assets.svg)](https://pub.dev/packages/tuesdae_assets)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+All the vehicle graphics and animations from **Tuesdae Rush** are now available as a **free, open-source Flutter package**!
+
+**📦 [tuesdae_assets](https://pub.dev/packages/tuesdae_assets)** - animated vehicle widgets
+
+- **MIT Licensed** - Use freely in any project, commercial or personal
+- **6 Vehicle Types** - Cars, ambulances, police, tractors, school buses, and more
+- **Fully Customizable** - Colors, sizes, directions, animations
+- **Zero Dependencies** - Pure Flutter implementation
+
+#### Installation of _tuesdae_assets_ 🚗 flutter package
+
+```bash
+flutter pub add tuesdae_assets
+```
+
+```dart
+// Use in your app
+TuesdaeVehicle.ambulance(
+  config: VehicleConfig(
+    isFlashing: true,
+    direction: VehicleDirection.north,
+  ),
+)
+```
+
+Perfect for traffic games, educational apps, city simulations, and any project that needs beautiful, animated vehicles. As we add new vehicle types and effects to Tuesdae Rush, they'll be added to the package for everyone to use!
+
 ## 📄 License
 
 This project is **Source Available** for educational and research purposes only.
