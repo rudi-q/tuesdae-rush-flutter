@@ -25,5 +25,39 @@
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+  <script>
+    // Array of symbols to cycle through
+    const symbols = ["🚦", "🚥"];
+    const symbols2 = ["🚗", "🚘︎"];
+    let index = 0;
+    let dots = " ∘"; // Variable to hold increasing dots
+
+    // Function to update the title
+    function updateTitle() {
+      const baseTitle = "Loading Tuesdae Rush  "; // Base title without the dots or symbol
+
+      // Add one more space after every interval
+      dots += " ∘";
+
+      if (dots.length > 6) {
+        dots = " ∘"; // Reset to no space
+      }
+
+      // Update the document title
+      document.title = baseTitle + dots + " " + symbols[index] + " " + symbols2[index];
+
+      // Move to the next symbol, loop back if at the end
+      index = (index + 1) % symbols.length;
+    }
+
+    // Change the title
+    titleUpdater = setInterval(updateTitle, 700);
+
+    // Expose a function to clear the interval
+    function stopTitleUpdater() {
+      clearInterval(titleUpdater);
+    }
+  </script>
 </body>
 </html>
