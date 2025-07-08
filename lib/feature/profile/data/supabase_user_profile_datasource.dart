@@ -19,12 +19,21 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
         return null; // For security, only return profile for current user
       }
 
+      // Get pseudonym from user_pseudonyms table
+      final pseudonymResult =
+          await client
+              .from('user_pseudonyms')
+              .select('username')
+              .eq('user_id', userId)
+              .maybeSingle();
+
       final stats = await getUserGameStats(userId);
 
       return UserProfile(
         userId: userId,
         email: currentUser.email,
         displayName: currentUser.userMetadata?['display_name'] as String?,
+        pseudonym: pseudonymResult?['username'] as String?,
         createdAt: DateTime.tryParse(currentUser.createdAt),
         stats: stats,
       );
@@ -43,6 +52,34 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
       }
 
       return getUserProfile(currentUser.id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<UserProfile?> getUserProfileByPseudonym(String pseudonym) async {
+    try {
+      // Get user_id from pseudonym
+      final pseudonymResult =
+          await client
+              .from('user_pseudonyms')
+              .select('user_id')
+              .eq('username', pseudonym)
+              .maybeSingle();
+
+      if (pseudonymResult == null) {
+        return null; // Pseudonym not found
+      }
+
+      final userId = pseudonymResult['user_id'] as String;
+
+      // For security, only return profile if it matches current user
+      final currentUser = client.auth.currentUser;
+      if (currentUser == null || currentUser.id != userId) {
+        return null;
+      }
+
+      return getUserProfile(userId);
     } catch (e) {
       return null;
     }
@@ -226,6 +263,43 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
       );
     } catch (e) {
       throw Exception('Failed to save display name: $e');
+    }
+  }
+
+  Future<void> updatePseudonym(String userId, String newPseudonym) async {
+    try {
+      final response = await client
+          .from('user_pseudonyms')
+          .update({
+            'username': newPseudonym,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('user_id', userId);
+
+      // Check if the update was successful
+      // If no rows were affected, the user might not have a pseudonym record yet
+      // In that case, create one
+      final existingRecord =
+          await client
+              .from('user_pseudonyms')
+              .select('id')
+              .eq('user_id', userId)
+              .maybeSingle();
+
+      if (existingRecord == null) {
+        await client.from('user_pseudonyms').insert({
+          'user_id': userId,
+          'username': newPseudonym,
+        });
+      }
+    } catch (e) {
+      if (e.toString().contains('unique constraint') ||
+          e.toString().contains('duplicate')) {
+        throw Exception(
+          'Username already taken. Please choose a different one.',
+        );
+      }
+      throw Exception('Failed to update username: $e');
     }
   }
 }

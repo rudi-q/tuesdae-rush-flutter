@@ -2,6 +2,7 @@ class UserProfile {
   final String userId;
   final String? email;
   final String? displayName;
+  final String? pseudonym; // Auto-generated username
   final DateTime? createdAt;
   final UserGameStats stats;
 
@@ -9,6 +10,7 @@ class UserProfile {
     required this.userId,
     this.email,
     this.displayName,
+    this.pseudonym,
     this.createdAt,
     required this.stats,
   });
@@ -17,6 +19,7 @@ class UserProfile {
     String? userId,
     String? email,
     String? displayName,
+    String? pseudonym,
     DateTime? createdAt,
     UserGameStats? stats,
   }) {
@@ -24,6 +27,7 @@ class UserProfile {
       userId: userId ?? this.userId,
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
+      pseudonym: pseudonym ?? this.pseudonym,
       createdAt: createdAt ?? this.createdAt,
       stats: stats ?? this.stats,
     );
