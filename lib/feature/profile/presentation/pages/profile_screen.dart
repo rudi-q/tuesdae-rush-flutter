@@ -3,10 +3,32 @@ import 'package:tuesdae_rush/feature/profile/domain/entities/user_profile.dart';
 import 'package:tuesdae_rush/feature/profile/domain/repositories/user_profile_repository.dart';
 import 'package:tuesdae_rush/feature/profile/infrastructure/datasources/supabase_user_profile_datasource.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final UserProfile userProfile;
 
   const ProfileScreen({super.key, required this.userProfile});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late UserProfile currentProfile;
+  bool isEditingName = false;
+  final TextEditingController _nameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    currentProfile = widget.userProfile;
+    _nameController.text = currentProfile.displayName ?? '';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Color(0xFF2A4A73),
         elevation: 0,
         title: Text(
-          userProfile.displayName ?? 'Player Profile',
+          currentProfile.displayName ?? 'Anonymous Player',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -98,26 +120,143 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16),
-          Text(
-            userProfile.displayName ?? 'Unknown Player',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          // Editable display name section
+          if (isEditingName)
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _nameController,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Enter your display name',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Color(0xFFFFD700)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white54),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Color(0xFFFFD700)),
+                      ),
+                    ),
+                    maxLength: 20,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  currentProfile.displayName?.isEmpty == false 
+                    ? currentProfile.displayName! 
+                    : 'Anonymous Player',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isEditingName = true;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      Icons.edit,
+                      size: 16,
+                      color: Color(0xFFFFD700),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
+          
+          if (isEditingName)
+            Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Cancel button
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isEditingName = false;
+                        _nameController.text = currentProfile.displayName ?? '';
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade600,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Save button
+                  GestureDetector(
+                    onTap: _saveDisplayName,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF4CAF50),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
           SizedBox(height: 8),
-          if (userProfile.email != null)
+          if (currentProfile.email != null)
             Text(
-              userProfile.email!,
+              currentProfile.email!,
               style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFFFFD700),
               ),
             ),
-          if (userProfile.createdAt != null)
+          if (currentProfile.createdAt != null)
             Text(
-              'Playing since ${_formatDate(userProfile.createdAt!)}',
+              'Playing since ${_formatDate(currentProfile.createdAt!)}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white70,
@@ -129,7 +268,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildStats() {
-    final stats = userProfile.stats;
+    final stats = currentProfile.stats;
 
     return Container(
       decoration: BoxDecoration(
@@ -431,10 +570,58 @@ class ProfileScreen extends StatelessWidget {
     );
   }
   
+  Future<void> _saveDisplayName() async {
+    final newName = _nameController.text.trim();
+    
+    if (newName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Display name cannot be empty'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    if (newName.length > 20) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Display name must be 20 characters or less'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    try {
+      final dataSource = SupabaseUserProfileDataSource();
+      await dataSource.saveDisplayName(currentProfile.userId, newName);
+      
+      setState(() {
+        currentProfile = currentProfile.copyWith(displayName: newName);
+        isEditingName = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✓ Display name updated successfully!'),
+          backgroundColor: Color(0xFF4CAF50),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update display name: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  
   Future<List<GameScore>> _loadRecentGames() async {
     try {
       final dataSource = SupabaseUserProfileDataSource();
-      return await dataSource.getRecentGameScores(userProfile.userId, limit: 5);
+      return await dataSource.getRecentGameScores(currentProfile.userId, limit: 5);
     } catch (e) {
       return [];
     }

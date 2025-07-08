@@ -188,5 +188,12 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
       return null;
     }
   }
+  Future<void> saveDisplayName(String userId, String displayName) async {
+    try {
+      await client.auth.updateUser(UserAttributes(data: {'display_name': displayName}));
+    } catch (e) {
+      throw Exception('Failed to save display name: $e');
+    }
+  }
 }
 
