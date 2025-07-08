@@ -823,6 +823,48 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   ),
                 ),
               ),
+              SizedBox(height: 16),
+              // Leaderboard button (only if authenticated)
+              if (AuthService().isAuthenticated)
+                GestureDetector(
+                  onTap: _showLeaderboard,
+                  child: Container(
+                    width: 160,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF9C27B0), // Purple color
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.emoji_events,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Leaderboard',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               SizedBox(height: 12),
               // Auth status indicator
               Container(
@@ -1185,7 +1227,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       ),
     );
   }
-
   // Authentication methods
   void _showSignInDialog() {
     final TextEditingController emailController = TextEditingController();
@@ -1193,71 +1234,123 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Sign In with Email'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Enter your email to receive a verification code:',
-                style: TextStyle(fontSize: 14),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 400, // Fixed width instead of percentage
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1E3264), Color(0xFF2A4A73)],
               ),
-              SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Color(0xFFFFD700).withValues(alpha: 0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 15,
+                  offset: Offset(0, 8),
                 ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'We\'ll send a 6-digit code to your email.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final email = emailController.text.trim();
-                if (email.isNotEmpty && email.contains('@')) {
-                  try {
-                    await AuthService().sendOtp(email);
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                      _showOtpDialog(email);
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to send code: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Please enter a valid email'),
-                        backgroundColor: Colors.orange,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Sign In with Email',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                    );
-                  }
-                }
-              },
-              child: Text('Send Code'),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+                Divider(color: Colors.white.withOpacity(0.5)),
+                SizedBox(height: 10),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    labelStyle: TextStyle(color: Colors.white54),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    prefixIcon: Icon(Icons.email, color: Colors.white),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white54),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'We\'ll send a 6-digit code to your email.',
+                  style: TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Cancel', style: TextStyle(color: Colors.redAccent)),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final email = emailController.text.trim();
+                        if (email.isNotEmpty && email.contains('@')) {
+                          try {
+                            await AuthService().sendOtp(email);
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                              _showOtpDialog(email);
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to send code: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please enter a valid email'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Color(0xFF4CAF50)),
+                      ),
+                      child: Text('Send Code'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -1270,120 +1363,171 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       context: context,
       barrierDismissible: false, // Don't allow dismissing by tapping outside
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Enter Verification Code'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Enter the 6-digit code sent to:',
-                style: TextStyle(fontSize: 14),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 400, // Fixed width instead of percentage
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1E3264), Color(0xFF2A4A73)],
               ),
-              SizedBox(height: 8),
-              Text(
-                email,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Color(0xFFFFD700).withValues(alpha: 0.3),
+                width: 2,
               ),
-              SizedBox(height: 16),
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 8,
-                  fontWeight: FontWeight.bold,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 15,
+                  offset: Offset(0, 8),
                 ),
-                decoration: InputDecoration(
-                  labelText: 'Verification Code',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.security),
-                  counterText: '', // Hide character counter
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Enter Verification Code',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Check your email for the code',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
+                Divider(color: Colors.white.withOpacity(0.5)),
+                SizedBox(height: 10),
+                Text(
+                  'Enter the 6-digit code sent to:',
+                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  email,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    letterSpacing: 8,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Verification Code',
+                    labelStyle: TextStyle(color: Colors.white54),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    prefixIcon: Icon(Icons.security, color: Colors.white),
+                    counterText: '', // Hide character counter
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white54),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Cancel', style: TextStyle(color: Colors.redAccent)),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        // Resend OTP
+                        try {
+                          await AuthService().sendOtp(email);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('New code sent to $email'),
+                                backgroundColor: Colors.blue,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to resend code: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Text('Resend', style: TextStyle(color: Colors.blue)),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final otp = otpController.text.trim();
+                        if (otp.length == 6) {
+                          try {
+                            await AuthService().verifyOtp(email, otp);
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                              setState(() {}); // Refresh UI
+                              
+                              // Sync local scores when user signs in
+                              await ScoreService().syncLocalScores();
+                              
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Successfully signed in!'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Invalid code. Please try again.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please enter a 6-digit code'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Color(0xFF4CAF50)),
+                      ),
+                      child: Text('Verify'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                // Resend OTP
-                try {
-                  await AuthService().sendOtp(email);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('New code sent to $email'),
-                        backgroundColor: Colors.blue,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to resend code: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              child: Text('Resend'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final otp = otpController.text.trim();
-                if (otp.length == 6) {
-                  try {
-                    await AuthService().verifyOtp(email, otp);
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                      setState(() {}); // Refresh UI
-                      
-                      // Sync local scores when user signs in
-                      await ScoreService().syncLocalScores();
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Successfully signed in!'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Invalid code. Please try again.'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Please enter a 6-digit code'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                  }
-                }
-              },
-              child: Text('Verify'),
-            ),
-          ],
         );
       },
     );
@@ -1416,98 +1560,393 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   void _showLeaderboard() {
     showDialog(
       context: context,
+      barrierColor: Color(0xFF1E3264).withValues(alpha: 0.8),
       builder: (BuildContext context) {
         return Dialog(
+          backgroundColor: Colors.transparent,
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.8,
-            padding: EdgeInsets.all(16),
+            width: MediaQuery.of(context).size.width * 0.95,
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF1E3264),
+                  Color(0xFF2A4A73),
+                  Color(0xFF1E3264),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Color(0xFFFFD700),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Leaderboard',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFD700),
+                // Header with trophy design
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFFFD700),
+                        Color(0xFFFFA000),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(17),
+                      topRight: Radius.circular(17),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.emoji_events,
+                          color: Color(0xFF1E3264),
+                          size: 32,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Expanded(
-                  child: FutureBuilder<List<Map<String, dynamic>>>(
-                    future: ScoreService().getLeaderboard(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            'Failed to load leaderboard',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        );
-                      }
-                      
-                      final scores = snapshot.data ?? [];
-                      if (scores.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'No scores yet!\nBe the first on the leaderboard!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        );
-                      }
-                      
-                      return ListView.builder(
-                        itemCount: scores.length,
-                        itemBuilder: (context, index) {
-                          final score = scores[index];
-                          final rank = index + 1;
-                          
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              leading: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: rank == 1 ? Colors.yellow : rank == 2 ? Colors.grey[400] : rank == 3 ? Color(0xFFCD7F32) : Colors.blue,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    rank.toString(),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                'Score: ${score['best_score']}',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                'Avg Success: ${(score['avg_success_rate'] ?? 0).toStringAsFixed(1)}% • ${score['games_played']} games',
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'TRAFFIC MASTERS',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E3264),
+                                letterSpacing: 1.2,
                               ),
                             ),
+                            Text(
+                              'Global Leaderboard',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF1E3264).withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: Color(0xFF1E3264),
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Leaderboard content
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: ScoreService().getLeaderboard(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Loading rankings...',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
-                        },
-                      );
-                    },
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFF5722).withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: Icon(
+                                    Icons.warning_amber,
+                                    color: Color(0xFFFF5722),
+                                    size: 48,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Failed to load leaderboard',
+                                  style: TextStyle(
+                                    color: Color(0xFFFF5722),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Check your connection and try again',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        
+                        final scores = snapshot.data ?? [];
+                        if (scores.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF4CAF50).withValues(alpha: 0.3),
+                                        Color(0xFF81C784).withValues(alpha: 0.2),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: Icon(
+                                    Icons.emoji_events_outlined,
+                                    color: Color(0xFFFFD700),
+                                    size: 64,
+                                  ),
+                                ),
+                                SizedBox(height: 24),
+                                Text(
+                                  'No Traffic Masters Yet!',
+                                  style: TextStyle(
+                                    color: Color(0xFFFFD700),
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Be the first to control the chaos\nand claim the crown!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        
+                        return ListView.builder(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          itemCount: scores.length,
+                          itemBuilder: (context, index) {
+                            final score = scores[index];
+                            final rank = index + 1;
+                            
+                            // Special styling for top 3
+                            Color rankColor;
+                            Color bgColor;
+                            IconData rankIcon;
+                            
+                            if (rank == 1) {
+                              rankColor = Color(0xFFFFD700); // Gold
+                              bgColor = Color(0xFFFFD700).withValues(alpha: 0.15);
+                              rankIcon = Icons.emoji_events;
+                            } else if (rank == 2) {
+                              rankColor = Color(0xFFC0C0C0); // Silver
+                              bgColor = Color(0xFFC0C0C0).withValues(alpha: 0.15);
+                              rankIcon = Icons.workspace_premium;
+                            } else if (rank == 3) {
+                              rankColor = Color(0xFFCD7F32); // Bronze
+                              bgColor = Color(0xFFCD7F32).withValues(alpha: 0.15);
+                              rankIcon = Icons.military_tech;
+                            } else {
+                              rankColor = Color(0xFF64B5F6); // Blue for others
+                              bgColor = Color(0xFF64B5F6).withValues(alpha: 0.1);
+                              rankIcon = Icons.directions_car;
+                            }
+                            
+                            return Container(
+                              margin: EdgeInsets.symmetric(vertical: 4),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    bgColor,
+                                    bgColor.withValues(alpha: 0.05),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: rankColor.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    // Rank indicator
+                                    Container(
+                                      width: 56,
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            rankColor,
+                                            rankColor.withValues(alpha: 0.8),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: rankColor.withValues(alpha: 0.3),
+                                            blurRadius: 8,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            rankIcon,
+                                            color: rank <= 3 ? Color(0xFF1E3264) : Colors.white,
+                                            size: rank <= 3 ? 20 : 18,
+                                          ),
+                                          Text(
+                                            '#$rank',
+                                            style: TextStyle(
+                                              color: rank <= 3 ? Color(0xFF1E3264) : Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    
+                                    SizedBox(width: 16),
+                                    
+                                    // Score info
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.traffic,
+                                                color: Color(0xFFFFD700),
+                                                size: 16,
+                                              ),
+                                              SizedBox(width: 6),
+                                              Text(
+                                                '${score['best_score']} Points',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Color(0xFF4CAF50).withValues(alpha: 0.2),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  '${(score['avg_success_rate'] ?? 0).toStringAsFixed(1)}% Success',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF4CAF50),
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 8),
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Color(0xFF2196F3).withValues(alpha: 0.2),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  '${score['games_played']} Games',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF2196F3),
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
