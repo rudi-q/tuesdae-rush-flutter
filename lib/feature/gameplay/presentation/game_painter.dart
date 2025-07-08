@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'game_state.dart';
+import '../domain/game_state.dart';
 
 class GamePainter extends CustomPainter {
   final GameState gameState;

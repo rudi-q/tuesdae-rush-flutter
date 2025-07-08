@@ -56,3 +56,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Exclude setup and schema files
+*setup.md
+*SETUP.md
+*schema.sql
+*SCHEMA.sql

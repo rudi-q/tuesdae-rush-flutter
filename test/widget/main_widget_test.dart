@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tuesdae_rush/main.dart';
+import 'package:tuesdae_rush/app.dart';
+import 'package:tuesdae_rush/feature/gameplay/presentation/game.dart';
+import 'package:tuesdae_rush/feature/gameplay/presentation/game_canvas.dart';
 
 void main() {
   group('Main Widget Tests', () {

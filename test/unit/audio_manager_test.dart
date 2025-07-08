@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tuesdae_rush/audio_manager.dart';
+import 'package:tuesdae_rush/feature/audio/audio_manager.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
