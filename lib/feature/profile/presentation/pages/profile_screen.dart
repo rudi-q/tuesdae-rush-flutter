@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tuesdae_rush/feature/profile/domain/entities/user_profile.dart';
+import 'package:tuesdae_rush/feature/profile/domain/repositories/user_profile_repository.dart';
+import 'package:tuesdae_rush/feature/profile/infrastructure/datasources/supabase_user_profile_datasource.dart';
 
 class ProfileScreen extends StatelessWidget {
   final UserProfile userProfile;
@@ -268,33 +270,206 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16),
-          SizedBox(
-            height: 120,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.games,
-                    size: 48,
-                    color: Colors.white54,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Recent games will be displayed here',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+          FutureBuilder<List<GameScore>>(
+            future: _loadRecentGames(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SizedBox(
+                  height: 120,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                );
+              }
+              
+              if (snapshot.hasError) {
+                return SizedBox(
+                  height: 120,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Failed to load recent games',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              
+              final recentGames = snapshot.data ?? [];
+              
+              if (recentGames.isEmpty) {
+                return SizedBox(
+                  height: 120,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.games,
+                          size: 48,
+                          color: Colors.white54,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No games played yet',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              
+              return Column(
+                children: recentGames.take(5).map((game) => _buildGameRow(game)).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildGameRow(GameScore game) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          // Difficulty indicator
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: _getDifficultyColor(game.difficultyLevel),
+              shape: BoxShape.circle,
+            ),
+          ),
+          SizedBox(width: 12),
+          
+          // Game info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Score: ${game.score}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      _formatDateTime(game.createdAt),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      game.difficultyLevel.toUpperCase(),
+                      style: TextStyle(
+                        color: _getDifficultyColor(game.difficultyLevel),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      '🚗 ${game.carsPassed}',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      '${game.successRate.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        color: Color(0xFFFFD700),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+  
+  Future<List<GameScore>> _loadRecentGames() async {
+    try {
+      final dataSource = SupabaseUserProfileDataSource();
+      return await dataSource.getRecentGameScores(userProfile.userId, limit: 5);
+    } catch (e) {
+      return [];
+    }
+  }
+  
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Color(0xFF4CAF50); // Green
+      case 'medium':
+        return Color(0xFFFF9800); // Orange
+      case 'hard':
+        return Color(0xFFFF5722); // Red
+      case 'extreme':
+        return Color(0xFF9C27B0); // Purple
+      case 'insane':
+        return Color(0xFFE91E63); // Pink
+      default:
+        return Colors.grey;
+    }
+  }
+  
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 
   String _formatDate(DateTime date) {

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/util/helper.dart';
 import '../../../profile/domain/entities/user_profile.dart';
 import '../../../profile/domain/repositories/user_profile_repository.dart';
 
@@ -66,26 +67,30 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
   @override
   Future<List<GameScore>> getRecentGameScores(String userId, {int limit = 10}) async {
     try {
+      devPrint('🔍 getRecentGameScores: Fetching games for user: $userId');
       final response = await client
           .from('game_scores')
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(limit);
+      
+      devPrint('🔍 getRecentGameScores: Response length: ${(response as List).length}');
 
       return (response as List)
           .map((e) => GameScore(
-                id: e['id'],
+                id: e['id'].toString(),
                 userId: e['user_id'],
                 score: e['score'],
                 difficultyLevel: e['difficulty_level'],
                 carsPassed: e['cars_passed'],
-                successRate: e['success_rate'],
-                objectivesCompleted: e['objectives_completed'],
-                createdAt: DateTime.tryParse(e['created_at'])!,
+                successRate: (e['success_rate'] as num).toDouble(),
+                objectivesCompleted: e['objectives_completed'] ?? {},
+                createdAt: DateTime.tryParse(e['created_at']) ?? DateTime.now(),
               ))
           .toList();
     } catch (e) {
+      devPrint('❌ getRecentGameScores Error: $e');
       return [];
     }
   }
@@ -93,12 +98,15 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
   @override
   Future<UserGameStats> getUserGameStats(String userId) async {
     try {
+      devPrint('📊 getUserGameStats: Fetching stats for user: $userId');
       // Get all game scores for this user
       final response = await client
           .from('game_scores')
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false);
+      
+      devPrint('📊 getUserGameStats: Response length: ${(response as List).length}');
 
       if (response.isEmpty) {
         return const UserGameStats(
