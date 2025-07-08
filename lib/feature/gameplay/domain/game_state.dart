@@ -2,10 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'analytics_service.dart';
-import 'audio_manager.dart';
-import 'mobile_manager.dart';
-import 'score_service.dart';
+import '../../../core/services/analytics_service.dart';
+import '../../../core/util/helper.dart';
+import '../../audio/audio_manager.dart';
+import '../../responsiveness/mobile_manager.dart';
+import '../../save-score/score_service.dart';
 
 enum Direction { north, south, east, west }
 enum LightState { red, green }
@@ -705,7 +706,7 @@ class GameState {
       objectives: Map<String, dynamic>.from(objectives),
     ).catchError((error) {
       // Handle errors silently in background
-      print('Failed to save score: $error');
+      devPrint('Failed to save score: $error');
     });
   }
 }

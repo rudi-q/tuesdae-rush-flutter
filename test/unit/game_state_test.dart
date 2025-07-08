@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tuesdae_rush/game_state.dart';
+import 'package:tuesdae_rush/feature/gameplay/domain/game_state.dart';
 
 void main() {
   group('GameState Tests', () {

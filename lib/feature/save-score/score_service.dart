@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'auth_service.dart';
-import 'dart:convert';
+
+import '../../core/util/helper.dart';
+import '../auth/auth_service.dart';
 
 class ScoreService {
   static final _instance = ScoreService._internal();
@@ -101,7 +104,7 @@ class ScoreService {
       await _clearLocalScores();
     } catch (e) {
       // Keep local scores if sync fails
-      print('Failed to sync local scores: $e');
+      devPrint('Failed to sync local scores: $e');
     }
   }
 
