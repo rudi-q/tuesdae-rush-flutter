@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tuesdae_rush/feature/profile/data/supabase_user_profile_datasource.dart';
 import 'package:tuesdae_rush/feature/profile/domain/entities/user_profile.dart';
 import 'package:tuesdae_rush/feature/profile/domain/repositories/user_profile_repository.dart';
-import 'package:tuesdae_rush/feature/profile/data/supabase_user_profile_datasource.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -39,10 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         title: Text(
           currentProfile.displayName ?? 'Anonymous Player',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -97,10 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Color(0xFFFFD700),
-                width: 3,
-              ),
+              border: Border.all(color: Color(0xFFFFD700), width: 3),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.3),
@@ -112,11 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: Color(0xFF4CAF50),
-              child: Icon(
-                Icons.person,
-                size: 60,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.person, size: 60, color: Colors.white),
             ),
           ),
           SizedBox(height: 16),
@@ -159,9 +149,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  currentProfile.displayName?.isEmpty == false 
-                    ? currentProfile.displayName! 
-                    : 'Anonymous Player',
+                  currentProfile.displayName?.isEmpty == false
+                      ? currentProfile.displayName!
+                      : 'Anonymous Player',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -181,16 +171,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Color(0xFFFFD700).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: Color(0xFFFFD700),
-                    ),
+                    child: Icon(Icons.edit, size: 16, color: Color(0xFFFFD700)),
                   ),
                 ),
               ],
             ),
-          
+
           if (isEditingName)
             Padding(
               padding: EdgeInsets.only(top: 12),
@@ -206,7 +192,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       });
                     },
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade600,
                         borderRadius: BorderRadius.circular(20),
@@ -226,7 +215,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   GestureDetector(
                     onTap: _saveDisplayName,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Color(0xFF4CAF50),
                         borderRadius: BorderRadius.circular(20),
@@ -244,23 +236,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-          
+
           SizedBox(height: 8),
           if (currentProfile.email != null)
             Text(
               currentProfile.email!,
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFFFFD700),
-              ),
+              style: TextStyle(fontSize: 14, color: Color(0xFFFFD700)),
             ),
           if (currentProfile.createdAt != null)
             Text(
               'Playing since ${_formatDate(currentProfile.createdAt!)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.white70),
             ),
         ],
       ),
@@ -294,11 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.bar_chart,
-                color: Color(0xFFFFD700),
-                size: 24,
-              ),
+              Icon(Icons.bar_chart, color: Color(0xFFFFD700), size: 24),
               SizedBox(width: 8),
               Text(
                 'Game Statistics',
@@ -314,7 +296,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildStatRow('🎮 Total Games', stats.totalGames.toString()),
           _buildStatRow('📈 Total Score', stats.totalScore.toString()),
           _buildStatRow('🏆 Best Score', stats.bestScore.toString()),
-          _buildStatRow('📊 Average Success Rate', '${stats.averageSuccessRate.toStringAsFixed(1)}%'),
+          _buildStatRow(
+            '📊 Average Success Rate',
+            '${stats.averageSuccessRate.toStringAsFixed(1)}%',
+          ),
           _buildStatRow('⭐ Favorite Difficulty', stats.favoriteDeffiDifficulty),
           _buildStatRow('🚗 Cars Passed', stats.totalCarsPassed.toString()),
           _buildStatRow('💥 Cars Crashed', stats.totalCarsCrashed.toString()),
@@ -341,10 +326,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               flex: 2,
               child: Text(
                 label,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 14),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -392,11 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.history,
-                color: Color(0xFFFFD700),
-                size: 24,
-              ),
+              Icon(Icons.history, color: Color(0xFFFFD700), size: 24),
               SizedBox(width: 8),
               Text(
                 'Recent Games',
@@ -417,12 +395,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 120,
                   child: Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFFFD700),
+                      ),
                     ),
                   ),
                 );
               }
-              
+
               if (snapshot.hasError) {
                 return SizedBox(
                   height: 120,
@@ -430,27 +410,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: Colors.red,
-                        ),
+                        Icon(Icons.error_outline, size: 48, color: Colors.red),
                         SizedBox(height: 8),
                         Text(
                           'Failed to load recent games',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                       ],
                     ),
                   ),
                 );
               }
-              
+
               final recentGames = snapshot.data ?? [];
-              
+
               if (recentGames.isEmpty) {
                 return SizedBox(
                   height: 120,
@@ -458,27 +431,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.games,
-                          size: 48,
-                          color: Colors.white54,
-                        ),
+                        Icon(Icons.games, size: 48, color: Colors.white54),
                         SizedBox(height: 8),
                         Text(
                           'No games played yet',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                       ],
                     ),
                   ),
                 );
               }
-              
+
               return Column(
-                children: recentGames.take(5).map((game) => _buildGameRow(game)).toList(),
+                children:
+                    recentGames
+                        .take(5)
+                        .map((game) => _buildGameRow(game))
+                        .toList(),
               );
             },
           ),
@@ -486,7 +456,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildGameRow(GameScore game) {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
@@ -507,7 +477,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SizedBox(width: 12),
-          
+
           // Game info
           Expanded(
             child: Column(
@@ -526,10 +496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Text(
                       _formatDateTime(game.createdAt),
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -547,18 +514,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(width: 12),
                     Text(
                       '🚗 ${game.carsPassed}',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     SizedBox(width: 12),
                     Text(
                       '${game.successRate.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Color(0xFFFFD700), fontSize: 12),
                     ),
                   ],
                 ),
@@ -569,10 +530,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Future<void> _saveDisplayName() async {
     final newName = _nameController.text.trim();
-    
+
     if (newName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -582,7 +543,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       return;
     }
-    
+
     if (newName.length > 20) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -592,17 +553,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       return;
     }
-    
+
     try {
       final dataSource = SupabaseUserProfileDataSource();
       await dataSource.saveDisplayName(currentProfile.userId, newName);
-      
+
       if (mounted) {
         setState(() {
           currentProfile = currentProfile.copyWith(displayName: newName);
           isEditingName = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('✓ Display name updated successfully!'),
@@ -621,16 +582,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
   }
-  
+
   Future<List<GameScore>> _loadRecentGames() async {
     try {
       final dataSource = SupabaseUserProfileDataSource();
-      return await dataSource.getRecentGameScores(currentProfile.userId, limit: 5);
+      return await dataSource.getRecentGameScores(
+        currentProfile.userId,
+        limit: 5,
+      );
     } catch (e) {
       return [];
     }
   }
-  
+
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
       case 'easy':
@@ -647,11 +611,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Colors.grey;
     }
   }
-  
+
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {

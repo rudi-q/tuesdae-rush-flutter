@@ -3,19 +3,19 @@ import '../entities/user_profile.dart';
 abstract class UserProfileRepository {
   /// Get user profile by user ID
   Future<UserProfile?> getUserProfile(String userId);
-  
+
   /// Get user profile by email
   Future<UserProfile?> getUserProfileByEmail(String email);
-  
+
   /// Update user profile information
   Future<void> updateUserProfile(UserProfile profile);
-  
+
   /// Get user's recent game scores
   Future<List<GameScore>> getRecentGameScores(String userId, {int limit = 10});
-  
+
   /// Get user's game statistics
   Future<UserGameStats> getUserGameStats(String userId);
-  
+
   /// Get user's rank in global leaderboard
   Future<int?> getUserRank(String userId);
 }

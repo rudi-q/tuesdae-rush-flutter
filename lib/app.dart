@@ -9,10 +9,7 @@ class TuesdaeRushApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Tuesdae Rush - Traffic Control Game',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        fontFamily: 'Segoe UI',
-      ),
+      theme: ThemeData(primarySwatch: Colors.green, fontFamily: 'Segoe UI'),
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
     );

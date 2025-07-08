@@ -30,8 +30,12 @@ class GameCanvasState extends State<GameCanvas> {
 
   Future<void> _loadBackgroundImage() async {
     try {
-      final ByteData data = await rootBundle.load('assets/images/grass_texture.jpg');
-      final ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final ByteData data = await rootBundle.load(
+        'assets/images/grass_texture.jpg',
+      );
+      final ui.Codec codec = await ui.instantiateImageCodec(
+        data.buffer.asUint8List(),
+      );
       final ui.FrameInfo frame = await codec.getNextFrame();
       if (mounted) {
         setState(() {
@@ -65,11 +69,11 @@ class GameCanvasState extends State<GameCanvas> {
                 widget.gameState.toggleTrafficLight(touchArea.direction);
                 AudioManager().playTrafficLightSwitch();
                 MobileManager().lightHaptic();
-                AnalyticsService.logTrafficLightToggle(touchArea.direction.name);
+                AnalyticsService.logTrafficLightToggle(
+                  touchArea.direction.name,
+                );
               },
-              child: Container(
-                color: Colors.transparent,
-              ),
+              child: Container(color: Colors.transparent),
             ),
           );
         }),

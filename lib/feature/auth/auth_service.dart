@@ -30,4 +30,3 @@ class AuthService {
     await Supabase.instance.client.auth.signOut();
   }
 }
-

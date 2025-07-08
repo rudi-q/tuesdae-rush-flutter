@@ -8,7 +8,7 @@ class AudioManager {
 
   final AudioPlayer _soundEffectPlayer = AudioPlayer();
   final AudioPlayer _sirenPlayer = AudioPlayer();
-  
+
   bool _soundEnabled = false;
   double _volume = 0.7;
 
@@ -43,7 +43,9 @@ class AudioManager {
   Future<void> playTrafficLightSwitch() async {
     if (!_soundEnabled) return;
     try {
-      await _soundEffectPlayer.play(AssetSource('audio/light_switch_click.mp3'));
+      await _soundEffectPlayer.play(
+        AssetSource('audio/light_switch_click.mp3'),
+      );
     } catch (e) {
       debugPrint('Error playing traffic light sound: $e');
     }
@@ -52,7 +54,9 @@ class AudioManager {
   Future<void> playCarPassed() async {
     if (!_soundEnabled) return;
     try {
-      await _soundEffectPlayer.play(AssetSource('audio/success_car_passed.mp3'));
+      await _soundEffectPlayer.play(
+        AssetSource('audio/success_car_passed.mp3'),
+      );
     } catch (e) {
       debugPrint('Error playing car passed sound: $e');
     }
@@ -61,7 +65,9 @@ class AudioManager {
   Future<void> playPerfectFlow() async {
     if (!_soundEnabled) return;
     try {
-      await _soundEffectPlayer.play(AssetSource('audio/success_perfect_flow.mp3'));
+      await _soundEffectPlayer.play(
+        AssetSource('audio/success_perfect_flow.mp3'),
+      );
     } catch (e) {
       debugPrint('Error playing perfect flow sound: $e');
     }
@@ -70,7 +76,9 @@ class AudioManager {
   Future<void> playCrash() async {
     if (!_soundEnabled) return;
     try {
-      await _soundEffectPlayer.play(AssetSource('audio/crash_minor_collision.mp3'));
+      await _soundEffectPlayer.play(
+        AssetSource('audio/crash_minor_collision.mp3'),
+      );
     } catch (e) {
       debugPrint('Error playing crash sound: $e');
     }

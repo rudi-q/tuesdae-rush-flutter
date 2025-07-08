@@ -53,11 +53,7 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
     try {
       // Update user metadata in auth
       await client.auth.updateUser(
-        UserAttributes(
-          data: {
-            'display_name': profile.displayName,
-          },
-        ),
+        UserAttributes(data: {'display_name': profile.displayName}),
       );
     } catch (e) {
       // Handle update errors
@@ -65,7 +61,10 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
   }
 
   @override
-  Future<List<GameScore>> getRecentGameScores(String userId, {int limit = 10}) async {
+  Future<List<GameScore>> getRecentGameScores(
+    String userId, {
+    int limit = 10,
+  }) async {
     try {
       devPrint('🔍 getRecentGameScores: Fetching games for user: $userId');
       final response = await client
@@ -74,20 +73,24 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(limit);
-      
-      devPrint('🔍 getRecentGameScores: Response length: ${(response as List).length}');
+
+      devPrint(
+        '🔍 getRecentGameScores: Response length: ${(response as List).length}',
+      );
 
       return (response as List)
-          .map((e) => GameScore(
-                id: e['id'].toString(),
-                userId: e['user_id'],
-                score: e['score'],
-                difficultyLevel: e['difficulty_level'],
-                carsPassed: e['cars_passed'],
-                successRate: (e['success_rate'] as num).toDouble(),
-                objectivesCompleted: e['objectives_completed'] ?? {},
-                createdAt: DateTime.tryParse(e['created_at']) ?? DateTime.now(),
-              ))
+          .map(
+            (e) => GameScore(
+              id: e['id'].toString(),
+              userId: e['user_id'],
+              score: e['score'],
+              difficultyLevel: e['difficulty_level'],
+              carsPassed: e['cars_passed'],
+              successRate: (e['success_rate'] as num).toDouble(),
+              objectivesCompleted: e['objectives_completed'] ?? {},
+              createdAt: DateTime.tryParse(e['created_at']) ?? DateTime.now(),
+            ),
+          )
           .toList();
     } catch (e) {
       devPrint('❌ getRecentGameScores Error: $e');
@@ -105,8 +108,10 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false);
-      
-      devPrint('📊 getUserGameStats: Response length: ${(response as List).length}');
+
+      devPrint(
+        '📊 getUserGameStats: Response length: ${(response as List).length}',
+      );
 
       if (response.isEmpty) {
         return const UserGameStats(
@@ -124,31 +129,53 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
       }
 
       final scores = response as List;
-      
+
       // Calculate stats
       final totalGames = scores.length;
-      final totalScore = scores.fold<int>(0, (sum, score) => sum + (score['score'] as int));
-      final bestScore = scores.fold<int>(0, (best, score) => 
-        (score['score'] as int) > best ? (score['score'] as int) : best);
-      final totalCarsPassed = scores.fold<int>(0, (sum, score) => sum + (score['cars_passed'] as int));
-      final averageSuccessRate = scores.isNotEmpty ? 
-        scores.fold<double>(0.0, (sum, score) => sum + (score['success_rate'] as num).toDouble()) / scores.length : 0.0;
-      
+      final totalScore = scores.fold<int>(
+        0,
+        (sum, score) => sum + (score['score'] as int),
+      );
+      final bestScore = scores.fold<int>(
+        0,
+        (best, score) =>
+            (score['score'] as int) > best ? (score['score'] as int) : best,
+      );
+      final totalCarsPassed = scores.fold<int>(
+        0,
+        (sum, score) => sum + (score['cars_passed'] as int),
+      );
+      final averageSuccessRate =
+          scores.isNotEmpty
+              ? scores.fold<double>(
+                    0.0,
+                    (sum, score) =>
+                        sum + (score['success_rate'] as num).toDouble(),
+                  ) /
+                  scores.length
+              : 0.0;
+
       // Calculate difficulty stats
       final Map<String, int> bestScoresByDifficulty = {};
       final Map<String, int> gamesByDifficulty = {};
-      
+
       for (final score in scores) {
         final difficulty = score['difficulty_level'] as String;
         final scoreValue = score['score'] as int;
-        
-        gamesByDifficulty[difficulty] = (gamesByDifficulty[difficulty] ?? 0) + 1;
-        bestScoresByDifficulty[difficulty] = 
-          scoreValue > (bestScoresByDifficulty[difficulty] ?? 0) ? scoreValue : (bestScoresByDifficulty[difficulty] ?? 0);
+
+        gamesByDifficulty[difficulty] =
+            (gamesByDifficulty[difficulty] ?? 0) + 1;
+        bestScoresByDifficulty[difficulty] =
+            scoreValue > (bestScoresByDifficulty[difficulty] ?? 0)
+                ? scoreValue
+                : (bestScoresByDifficulty[difficulty] ?? 0);
       }
-      
-      final lastPlayedAt = scores.isNotEmpty ? DateTime.tryParse(scores.first['created_at']) : null;
-      
+
+      final lastPlayedAt =
+          scores.isNotEmpty
+              ? DateTime.tryParse(scores.first['created_at'])
+              : null;
+
       return UserGameStats(
         totalGames: totalGames,
         totalScore: totalScore,
@@ -182,18 +209,23 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
   @override
   Future<int?> getUserRank(String userId) async {
     try {
-      final response = await client.rpc('get_user_rank', params: {'user_uuid': userId});
+      final response = await client.rpc(
+        'get_user_rank',
+        params: {'user_uuid': userId},
+      );
       return response as int?;
     } catch (e) {
       return null;
     }
   }
+
   Future<void> saveDisplayName(String userId, String displayName) async {
     try {
-      await client.auth.updateUser(UserAttributes(data: {'display_name': displayName}));
+      await client.auth.updateUser(
+        UserAttributes(data: {'display_name': displayName}),
+      );
     } catch (e) {
       throw Exception('Failed to save display name: $e');
     }
   }
 }
-

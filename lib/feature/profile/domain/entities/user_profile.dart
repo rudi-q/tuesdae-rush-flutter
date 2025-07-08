@@ -58,11 +58,12 @@ class UserGameStats {
   });
 
   double get averageScore => totalGames > 0 ? totalScore / totalGames : 0.0;
-  
-  double get crashRate => totalCarsPassed > 0 
-    ? (totalCarsCrashed / (totalCarsPassed + totalCarsCrashed)) * 100 
-    : 0.0;
-    
+
+  double get crashRate =>
+      totalCarsPassed > 0
+          ? (totalCarsCrashed / (totalCarsPassed + totalCarsCrashed)) * 100
+          : 0.0;
+
   String get favoriteDeffiDifficulty {
     if (gamesByDifficulty.isEmpty) return 'None';
     return gamesByDifficulty.entries
@@ -90,7 +91,8 @@ class UserGameStats {
       averageSuccessRate: averageSuccessRate ?? this.averageSuccessRate,
       totalCarsPassed: totalCarsPassed ?? this.totalCarsPassed,
       totalCarsCrashed: totalCarsCrashed ?? this.totalCarsCrashed,
-      bestScoresByDifficulty: bestScoresByDifficulty ?? this.bestScoresByDifficulty,
+      bestScoresByDifficulty:
+          bestScoresByDifficulty ?? this.bestScoresByDifficulty,
       gamesByDifficulty: gamesByDifficulty ?? this.gamesByDifficulty,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
       currentStreak: currentStreak ?? this.currentStreak,

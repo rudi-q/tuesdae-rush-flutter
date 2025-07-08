@@ -16,17 +16,10 @@ showLeaderboard(BuildContext context) {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF1E3264),
-                Color(0xFF2A4A73),
-                Color(0xFF1E3264),
-              ],
+              colors: [Color(0xFF1E3264), Color(0xFF2A4A73), Color(0xFF1E3264)],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Color(0xFFFFD700),
-              width: 3,
-            ),
+            border: Border.all(color: Color(0xFFFFD700), width: 3),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.5),
@@ -42,10 +35,7 @@ showLeaderboard(BuildContext context) {
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Color(0xFFFFD700),
-                      Color(0xFFFFA000),
-                    ],
+                    colors: [Color(0xFFFFD700), Color(0xFFFFA000)],
                   ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(17),
@@ -125,11 +115,15 @@ showLeaderboard(BuildContext context) {
                               Container(
                                 padding: EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                                  color: Color(
+                                    0xFFFFD700,
+                                  ).withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(50),
                                 ),
                                 child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFFFD700),
+                                  ),
                                   strokeWidth: 3,
                                 ),
                               ),
@@ -154,7 +148,9 @@ showLeaderboard(BuildContext context) {
                               Container(
                                 padding: EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFF5722).withValues(alpha: 0.2),
+                                  color: Color(
+                                    0xFFFF5722,
+                                  ).withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(50),
                                 ),
                                 child: Icon(
@@ -294,24 +290,33 @@ showLeaderboard(BuildContext context) {
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: rankColor.withValues(alpha: 0.3),
+                                          color: rankColor.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           blurRadius: 8,
                                           offset: Offset(0, 4),
                                         ),
                                       ],
                                     ),
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           rankIcon,
-                                          color: rank <= 3 ? Color(0xFF1E3264) : Colors.white,
+                                          color:
+                                              rank <= 3
+                                                  ? Color(0xFF1E3264)
+                                                  : Colors.white,
                                           size: rank <= 3 ? 20 : 18,
                                         ),
                                         Text(
                                           '#$rank',
                                           style: TextStyle(
-                                            color: rank <= 3 ? Color(0xFF1E3264) : Colors.white,
+                                            color:
+                                                rank <= 3
+                                                    ? Color(0xFF1E3264)
+                                                    : Colors.white,
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -325,7 +330,8 @@ showLeaderboard(BuildContext context) {
                                   // Score info
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -349,10 +355,16 @@ showLeaderboard(BuildContext context) {
                                         Row(
                                           children: [
                                             Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 2,
+                                              ),
                                               decoration: BoxDecoration(
-                                                color: Color(0xFF4CAF50).withValues(alpha: 0.2),
-                                                borderRadius: BorderRadius.circular(8),
+                                                color: Color(
+                                                  0xFF4CAF50,
+                                                ).withValues(alpha: 0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 '${(score['avg_success_rate'] ?? 0).toStringAsFixed(1)}% Success',
@@ -365,10 +377,16 @@ showLeaderboard(BuildContext context) {
                                             ),
                                             SizedBox(width: 8),
                                             Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 2,
+                                              ),
                                               decoration: BoxDecoration(
-                                                color: Color(0xFF2196F3).withValues(alpha: 0.2),
-                                                borderRadius: BorderRadius.circular(8),
+                                                color: Color(
+                                                  0xFF2196F3,
+                                                ).withValues(alpha: 0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 '${score['games_played']} Games',

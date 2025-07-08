@@ -6,7 +6,6 @@ import 'core/services/firebase_options.dart';
 import 'core/services/supabase_config.dart';
 
 Future<void> initializeApp() async {
-
   // Initialize Firebase with proper error handling
   try {
     await Firebase.initializeApp(

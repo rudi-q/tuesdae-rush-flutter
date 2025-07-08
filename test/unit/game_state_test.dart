@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tuesdae_rush/feature/gameplay/domain/game_state.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('GameState Tests', () {
     late GameState gameState;
 
@@ -33,8 +35,14 @@ void main() {
 
       test('should initialize traffic lights correctly', () {
         expect(gameState.trafficLights.length, equals(4));
-        expect(gameState.trafficLights[Direction.north], equals(LightState.green));
-        expect(gameState.trafficLights[Direction.south], equals(LightState.green));
+        expect(
+          gameState.trafficLights[Direction.north],
+          equals(LightState.green),
+        );
+        expect(
+          gameState.trafficLights[Direction.south],
+          equals(LightState.green),
+        );
         expect(gameState.trafficLights[Direction.east], equals(LightState.red));
         expect(gameState.trafficLights[Direction.west], equals(LightState.red));
       });
@@ -42,7 +50,7 @@ void main() {
       test('should initialize objectives correctly', () {
         expect(gameState.objectives.length, equals(6));
         expect(gameState.objectivesCompleted.length, equals(6));
-        
+
         for (String key in gameState.objectives.keys) {
           expect(gameState.objectives[key], equals(false));
           expect(gameState.objectivesCompleted[key], equals(false));
@@ -53,7 +61,7 @@ void main() {
     group('Game Dimensions', () {
       test('should update dimensions correctly', () {
         gameState.updateDimensions(1200, 800);
-        
+
         expect(gameState.gameWidth, equals(1200));
         expect(gameState.gameHeight, equals(800));
         expect(gameState.intersectionSize, greaterThan(150));
@@ -62,17 +70,18 @@ void main() {
 
       test('should maintain minimum intersection and road sizes', () {
         gameState.updateDimensions(100, 100);
-        
+
         expect(gameState.intersectionSize, equals(150));
         expect(gameState.roadWidth, equals(60));
       });
 
       test('should update touch areas when dimensions change', () {
         gameState.updateDimensions(800, 600);
-        List<TrafficLightTouchArea> touchAreas = gameState.getTrafficLightTouchAreas();
-        
+        List<TrafficLightTouchArea> touchAreas =
+            gameState.getTrafficLightTouchAreas();
+
         expect(touchAreas.length, equals(4));
-        
+
         for (var area in touchAreas) {
           expect(area.bounds.width, greaterThanOrEqualTo(80));
           expect(area.bounds.height, greaterThanOrEqualTo(80));
@@ -84,18 +93,28 @@ void main() {
       test('should toggle traffic light state', () {
         LightState initialState = gameState.trafficLights[Direction.north]!;
         gameState.toggleTrafficLight(Direction.north);
-        
-        expect(gameState.trafficLights[Direction.north], 
-               equals(initialState == LightState.red ? LightState.green : LightState.red));
+
+        expect(
+          gameState.trafficLights[Direction.north],
+          equals(
+            initialState == LightState.red ? LightState.green : LightState.red,
+          ),
+        );
       });
 
       test('should toggle all directions correctly', () {
         for (Direction direction in Direction.values) {
           LightState initialState = gameState.trafficLights[direction]!;
           gameState.toggleTrafficLight(direction);
-          
-          expect(gameState.trafficLights[direction], 
-                 equals(initialState == LightState.red ? LightState.green : LightState.red));
+
+          expect(
+            gameState.trafficLights[direction],
+            equals(
+              initialState == LightState.red
+                  ? LightState.green
+                  : LightState.red,
+            ),
+          );
         }
       });
     });
@@ -109,7 +128,7 @@ void main() {
       test('should return correct difficulty color', () {
         gameState.changeDifficulty(Difficulty.easy);
         expect(gameState.getDifficultyColor(), equals(Color(0xFF2ECC71)));
-        
+
         gameState.changeDifficulty(Difficulty.hard);
         expect(gameState.getDifficultyColor(), equals(Color(0xFFE74C3C)));
       });
@@ -117,7 +136,7 @@ void main() {
       test('should return correct difficulty multiplier', () {
         gameState.changeDifficulty(Difficulty.easy);
         expect(gameState.getDifficultyMultiplier(), equals(1.0));
-        
+
         gameState.changeDifficulty(Difficulty.insane);
         expect(gameState.getDifficultyMultiplier(), equals(3.0));
       });
@@ -132,9 +151,12 @@ void main() {
           color: Colors.blue,
         );
         gameState.cars.add(testCar);
-        
+
         gameState.changeDifficulty(Difficulty.hard);
-        expect(testCar.speed, equals(gameState.difficultySettings[Difficulty.hard]!.carSpeed));
+        expect(
+          testCar.speed,
+          equals(gameState.difficultySettings[Difficulty.hard]!.carSpeed),
+        );
       });
     });
 
@@ -160,16 +182,18 @@ void main() {
         gameState.totalCarsPassed = 8;
         gameState.totalCarsCrashed = 2;
         gameState.isGameOver = true;
-        gameState.cars.add(Car(
-          from: Direction.north,
-          to: Direction.south,
-          speed: 2.0,
-          type: CarType.regular,
-          color: Colors.blue,
-        ));
-        
+        gameState.cars.add(
+          Car(
+            from: Direction.north,
+            to: Direction.south,
+            speed: 2.0,
+            type: CarType.regular,
+            color: Colors.blue,
+          ),
+        );
+
         gameState.restart();
-        
+
         expect(gameState.score, equals(0));
         expect(gameState.totalCarsSpawned, equals(0));
         expect(gameState.totalCarsPassed, equals(0));
@@ -186,11 +210,11 @@ void main() {
     group('Statistics', () {
       test('should calculate success rate correctly', () {
         expect(gameState.getSuccessRate(), equals(100)); // No cars spawned yet
-        
+
         gameState.totalCarsSpawned = 10;
         gameState.totalCarsPassed = 8;
         expect(gameState.getSuccessRate(), equals(80));
-        
+
         gameState.totalCarsSpawned = 0;
         expect(gameState.getSuccessRate(), equals(100));
       });
@@ -207,12 +231,12 @@ void main() {
         waitingCar.stopped = true;
         waitingCar.hasPassedIntersection = false;
         gameState.cars.add(waitingCar);
-        
+
         // Set light to red for this direction
         gameState.trafficLights[Direction.north] = LightState.red;
-        
+
         expect(gameState.getWaitingCarsCount(), equals(1));
-        
+
         // Change light to green
         gameState.trafficLights[Direction.north] = LightState.green;
         expect(gameState.getWaitingCarsCount(), equals(0));
@@ -230,7 +254,7 @@ void main() {
         crashedCar.crashed = true;
         crashedCar.hasPassedIntersection = false;
         gameState.cars.add(crashedCar);
-        
+
         gameState.trafficLights[Direction.north] = LightState.red;
         expect(gameState.getWaitingCarsCount(), equals(0));
       });
@@ -241,9 +265,9 @@ void main() {
         gameState.gameStarted = true;
         gameState.carSpawnTimer = 0;
         gameState.nextSpawnTime = 0;
-        
+
         gameState.update();
-        
+
         // Should have spawned a car or updated spawn timer
         expect(gameState.carSpawnTimer, greaterThan(0));
       });
@@ -253,29 +277,29 @@ void main() {
       test('should not update when paused', () {
         gameState.gameStarted = true;
         gameState.isPaused = true;
-        
+
         int initialScore = gameState.score;
         gameState.update();
-        
+
         expect(gameState.score, equals(initialScore));
       });
 
       test('should not update when game over', () {
         gameState.gameStarted = true;
         gameState.isGameOver = true;
-        
+
         int initialScore = gameState.score;
         gameState.update();
-        
+
         expect(gameState.score, equals(initialScore));
       });
 
       test('should not update when game not started', () {
         gameState.gameStarted = false;
-        
+
         int initialScore = gameState.score;
         gameState.update();
-        
+
         expect(gameState.score, equals(initialScore));
       });
     });
@@ -291,11 +315,11 @@ void main() {
     group('Game Over Detection', () {
       test('should detect game over state', () {
         expect(gameState.isGameOver, equals(false));
-        
+
         // Game over can be triggered by update loop
         gameState.gameStarted = true;
         gameState.update();
-        
+
         // Should not be game over initially
         expect(gameState.isGameOver, equals(false));
       });

@@ -11,7 +11,7 @@ void main() {
       gameState = GameState();
       gameState.initialize();
       gameState.updateDimensions(800, 600);
-      
+
       testCar = Car(
         from: Direction.north,
         to: Direction.south,
@@ -37,19 +37,19 @@ void main() {
       test('should return correct size for different car types', () {
         testCar.type = CarType.regular;
         expect(testCar.getSize(), equals(20));
-        
+
         testCar.type = CarType.ambulance;
         expect(testCar.getSize(), equals(24));
-        
+
         testCar.type = CarType.police;
         expect(testCar.getSize(), equals(22));
-        
+
         testCar.type = CarType.tractor;
         expect(testCar.getSize(), equals(18));
-        
+
         testCar.type = CarType.schoolBus;
         expect(testCar.getSize(), equals(84));
-        
+
         testCar.type = CarType.impatient;
         expect(testCar.getSize(), equals(20));
       });
@@ -57,13 +57,13 @@ void main() {
       test('should return correct rotation angle for different directions', () {
         testCar.to = Direction.south;
         expect(testCar.getRotationAngle(), equals(0));
-        
+
         testCar.to = Direction.north;
         expect(testCar.getRotationAngle(), equals(3.141592653589793));
-        
+
         testCar.to = Direction.east;
         expect(testCar.getRotationAngle(), equals(-1.5707963267948966));
-        
+
         testCar.to = Direction.west;
         expect(testCar.getRotationAngle(), equals(1.5707963267948966));
       });
@@ -75,10 +75,10 @@ void main() {
         testCar.x = 400;
         testCar.y = 100;
         double initialY = testCar.y;
-        
+
         gameState.cars.add(testCar);
         testCar.update(gameState);
-        
+
         // Car should move forward (y should increase for north direction)
         expect(testCar.y, greaterThan(initialY));
       });
@@ -90,9 +90,9 @@ void main() {
         testCar.x = 400;
         testCar.y = 250; // Close to intersection
         gameState.trafficLights[Direction.north] = LightState.red;
-        
+
         testCar.update(gameState);
-        
+
         expect(testCar.stopped, equals(true));
       });
 
@@ -101,9 +101,9 @@ void main() {
         testCar.x = 400;
         testCar.y = 250;
         gameState.trafficLights[Direction.north] = LightState.green;
-        
+
         testCar.update(gameState);
-        
+
         expect(testCar.stopped, equals(false));
       });
 
@@ -113,9 +113,9 @@ void main() {
         testCar.x = 400;
         testCar.y = 250;
         gameState.trafficLights[Direction.north] = LightState.red;
-        
+
         testCar.update(gameState);
-        
+
         expect(testCar.stopped, equals(false));
       });
 
@@ -125,9 +125,9 @@ void main() {
         testCar.x = 400;
         testCar.y = 250;
         gameState.trafficLights[Direction.north] = LightState.red;
-        
+
         testCar.update(gameState);
-        
+
         expect(testCar.stopped, equals(false));
       });
     });
@@ -146,16 +146,16 @@ void main() {
         carAhead.y = 280;
         carAhead.stopped = true;
         gameState.cars.add(carAhead);
-        
+
         // Create following car
         testCar.from = Direction.north;
         testCar.to = Direction.south;
         testCar.x = 400;
         testCar.y = 250; // Behind the first car
         gameState.cars.add(testCar);
-        
+
         testCar.update(gameState);
-        
+
         expect(testCar.stopped, equals(true));
       });
 
@@ -172,7 +172,7 @@ void main() {
         carAhead.y = 280;
         carAhead.stopped = true;
         gameState.cars.add(carAhead);
-        
+
         // Create police car following
         testCar.type = CarType.police;
         testCar.from = Direction.north;
@@ -180,9 +180,9 @@ void main() {
         testCar.x = 400;
         testCar.y = 250;
         gameState.cars.add(testCar);
-        
+
         testCar.update(gameState);
-        
+
         expect(testCar.stopped, equals(false));
       });
     });
@@ -193,15 +193,15 @@ void main() {
         testCar.x = 400;
         testCar.y = gameState.gameHeight / 2;
         gameState.cars.add(testCar);
-        
+
         expect(testCar.hasPassedIntersection, equals(false));
-        
+
         // After multiple updates, car should eventually pass intersection
         for (int i = 0; i < 50; i++) {
           testCar.update(gameState);
           if (testCar.hasPassedIntersection) break;
         }
-        
+
         // Test passed if we can track intersection state
         expect(testCar.hasPassedIntersection, isA<bool>());
       });
@@ -211,35 +211,35 @@ void main() {
       test('should detect when car is off screen left', () {
         testCar.x = -60;
         testCar.y = 300;
-        
+
         expect(testCar.isOffScreen(800, 600), equals(true));
       });
 
       test('should detect when car is off screen right', () {
         testCar.x = 860;
         testCar.y = 300;
-        
+
         expect(testCar.isOffScreen(800, 600), equals(true));
       });
 
       test('should detect when car is off screen top', () {
         testCar.x = 400;
         testCar.y = -60;
-        
+
         expect(testCar.isOffScreen(800, 600), equals(true));
       });
 
       test('should detect when car is off screen bottom', () {
         testCar.x = 400;
         testCar.y = 660;
-        
+
         expect(testCar.isOffScreen(800, 600), equals(true));
       });
 
       test('should not detect as off screen when within bounds', () {
         testCar.x = 400;
         testCar.y = 300;
-        
+
         expect(testCar.isOffScreen(800, 600), equals(false));
       });
     });
@@ -258,20 +258,19 @@ void main() {
         carAhead.y = 280;
         carAhead.stopped = true;
         gameState.cars.add(carAhead);
-        
+
         testCar.from = Direction.north;
         testCar.to = Direction.south;
         testCar.x = 400;
         testCar.y = 250;
         gameState.cars.add(testCar);
-        
+
         testCar.update(gameState);
-        
+
         // Should stop when car ahead is stopped
         expect(testCar.stopped, equals(true));
       });
     });
-
   });
 }
 

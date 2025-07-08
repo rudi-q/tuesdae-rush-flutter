@@ -6,56 +6,59 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/services/analytics_service.dart';
 import '../../feature/auth/auth_service.dart';
 import '../../feature/gameplay/presentation/game.dart';
-import '../../feature/profile/domain/entities/user_profile.dart';
 import '../../feature/profile/data/supabase_user_profile_datasource.dart';
+import '../../feature/profile/domain/entities/user_profile.dart';
 import '../../feature/profile/presentation/profile_screen.dart';
 
 class AppRouter {
   static GoRouter get router {
     final analytics = AnalyticsService.analytics;
-    
+
     return GoRouter(
       initialLocation: '/',
-      observers: analytics != null ? [
-        FirebaseAnalyticsObserver(analytics: analytics),
-      ] : [],
+      observers:
+          analytics != null
+              ? [FirebaseAnalyticsObserver(analytics: analytics)]
+              : [],
       routes: [
-      // Game route (home)
-      GoRoute(
-        path: '/',
-        name: 'game',
-        builder: (context, state) => const TuesdaeRushGame(),
-      ),
-      
-      // Profile route
-      GoRoute(
-        path: '/player/:username',
-        name: 'profile',
-        builder: (context, state) {
-          final username = state.pathParameters['username']!;
-          return ProfileScreenWrapper(username: username);
-        },
-      ),
-  ],
-  
-  // Error page
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red),
-            SizedBox(height: 16),
-            Text('Page not found: ${state.matchedLocation}'),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go('/'),
-              child: Text('Go Home'),
-            ),
-          ],
+        // Game route (home)
+        GoRoute(
+          path: '/',
+          name: 'game',
+          builder: (context, state) => const TuesdaeRushGame(),
         ),
-      ),
-    ));
+
+        // Profile route
+        GoRoute(
+          path: '/player/:username',
+          name: 'profile',
+          builder: (context, state) {
+            final username = state.pathParameters['username']!;
+            return ProfileScreenWrapper(username: username);
+          },
+        ),
+      ],
+
+      // Error page
+      errorBuilder:
+          (context, state) => Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  SizedBox(height: 16),
+                  Text('Page not found: ${state.matchedLocation}'),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.go('/'),
+                    child: Text('Go Home'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
   }
 }
 
@@ -142,7 +145,7 @@ class ProfileScreenWrapper extends StatelessWidget {
     }
 
     final dataSource = SupabaseUserProfileDataSource();
-    
+
     // Try to get by email first (since we might not have a username field)
     // This is a simplified approach - you might want to enhance this based on your needs
     try {
@@ -150,7 +153,7 @@ class ProfileScreenWrapper extends StatelessWidget {
       if (currentUser != null && currentUser.email == username) {
         return await dataSource.getUserProfile(currentUser.id);
       }
-      
+
       // If username doesn't match current user's email, try searching by email
       return await dataSource.getUserProfileByEmail(username);
     } catch (e) {
