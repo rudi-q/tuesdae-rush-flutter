@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/services/analytics_service.dart';
@@ -14,7 +15,6 @@ import '../domain/game_state.dart';
 import 'game_canvas.dart' show GameCanvas;
 import 'game_components.dart' show buildInstructions;
 
-
 class TuesdaeRushGame extends StatefulWidget {
   const TuesdaeRushGame({super.key});
 
@@ -24,7 +24,6 @@ class TuesdaeRushGame extends StatefulWidget {
 
 class TuesdaeRushGameState extends State<TuesdaeRushGame>
     with TickerProviderStateMixin {
-
   late AnimationController _gameLoopController;
   late GameState gameState;
   late AudioManager audioManager;
@@ -58,7 +57,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   }
 
   void _gameLoop() {
-    if (mounted && !gameState.isPaused && !gameState.isGameOver && gameState.gameStarted) {
+    if (mounted &&
+        !gameState.isPaused &&
+        !gameState.isGameOver &&
+        gameState.gameStarted) {
       setState(() {
         gameState.update();
       });
@@ -81,7 +83,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             Positioned.fill(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  gameState.updateDimensions(constraints.maxWidth, constraints.maxHeight);
+                  gameState.updateDimensions(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                  );
                   return GameCanvas(gameState: gameState);
                 },
               ),
@@ -137,14 +142,18 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             ),
             child: Text(
               'Tuesdae Rush',
-              style: responsive.getTextStyle(context, 'header', fontWeight: FontWeight.bold),
+              style: responsive.getTextStyle(
+                context,
+                'header',
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           SizedBox(height: responsive.getSpacing(context, type: 'small')),
           Container(
             padding: EdgeInsets.symmetric(
-                horizontal: padding.horizontal * 0.8,
-                vertical: padding.vertical * 0.4
+              horizontal: padding.horizontal * 0.8,
+              vertical: padding.vertical * 0.4,
             ),
             decoration: BoxDecoration(
               color: Color(0xFF77ACA2).withValues(alpha: 0.3),
@@ -153,7 +162,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             ),
             child: Text(
               'Just another Tuesdae traffic scene',
-              style: responsive.getTextStyle(context, 'subtitle').copyWith(fontStyle: FontStyle.italic),
+              style: responsive
+                  .getTextStyle(context, 'subtitle')
+                  .copyWith(fontStyle: FontStyle.italic),
             ),
           ),
         ],
@@ -172,9 +183,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       top: layout['scorePosition']['top'],
       left: layout['scorePosition']['left'], // Back to top left corner
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: layout['panelMaxWidth'],
-        ),
+        constraints: BoxConstraints(maxWidth: layout['panelMaxWidth']),
         padding: padding,
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: opacity),
@@ -185,13 +194,62 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           mainAxisSize: MainAxisSize.min,
           children: [
             // Always show full details with slightly larger text on mobile
-            Text('Score: ${gameState.score}', style: responsive.getTextStyle(context, 'score', fontWeight: FontWeight.bold)),
-            Text('Difficulty: ${gameState.currentDifficulty.name}', style: responsive.getTextStyle(context, isMobileDevice ? 'body' : 'caption', color: gameState.getDifficultyColor())),
-            Text('Multiplier: x${gameState.getDifficultyMultiplier()}', style: responsive.getTextStyle(context, isMobileDevice ? 'body' : 'caption', color: Color(0xFFFFFF96))),
-            Text('Cars: ${gameState.totalCarsPassed}/${gameState.totalCarsSpawned}', style: responsive.getTextStyle(context, isMobileDevice ? 'body' : 'caption', color: Color(0xFFC8FFC8))),
-            Text('Crashed: ${gameState.totalCarsCrashed}', style: responsive.getTextStyle(context, isMobileDevice ? 'body' : 'caption', color: Color(0xFFFF9696))),
-            Text('Waiting: ${gameState.getWaitingCarsCount()}', style: responsive.getTextStyle(context, isMobileDevice ? 'body' : 'caption', color: Color(0xFFFFC864))),
-            Text('Success: ${gameState.getSuccessRate()}%', style: responsive.getTextStyle(context, isMobileDevice ? 'body' : 'caption', color: Colors.yellow)),
+            Text(
+              'Score: ${gameState.score}',
+              style: responsive.getTextStyle(
+                context,
+                'score',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Difficulty: ${gameState.currentDifficulty.name}',
+              style: responsive.getTextStyle(
+                context,
+                isMobileDevice ? 'body' : 'caption',
+                color: gameState.getDifficultyColor(),
+              ),
+            ),
+            Text(
+              'Multiplier: x${gameState.getDifficultyMultiplier()}',
+              style: responsive.getTextStyle(
+                context,
+                isMobileDevice ? 'body' : 'caption',
+                color: Color(0xFFFFFF96),
+              ),
+            ),
+            Text(
+              'Cars: ${gameState.totalCarsPassed}/${gameState.totalCarsSpawned}',
+              style: responsive.getTextStyle(
+                context,
+                isMobileDevice ? 'body' : 'caption',
+                color: Color(0xFFC8FFC8),
+              ),
+            ),
+            Text(
+              'Crashed: ${gameState.totalCarsCrashed}',
+              style: responsive.getTextStyle(
+                context,
+                isMobileDevice ? 'body' : 'caption',
+                color: Color(0xFFFF9696),
+              ),
+            ),
+            Text(
+              'Waiting: ${gameState.getWaitingCarsCount()}',
+              style: responsive.getTextStyle(
+                context,
+                isMobileDevice ? 'body' : 'caption',
+                color: Color(0xFFFFC864),
+              ),
+            ),
+            Text(
+              'Success: ${gameState.getSuccessRate()}%',
+              style: responsive.getTextStyle(
+                context,
+                isMobileDevice ? 'body' : 'caption',
+                color: Colors.yellow,
+              ),
+            ),
           ],
         ),
       ),
@@ -208,12 +266,16 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
     return Positioned(
       top: layout['objectivesPosition']['top'],
-      right: layout['objectivesPosition'].containsKey('right') ? layout['objectivesPosition']['right'] : null,
-      left: layout['objectivesPosition'].containsKey('left') ? layout['objectivesPosition']['left'] : null,
+      right:
+          layout['objectivesPosition'].containsKey('right')
+              ? layout['objectivesPosition']['right']
+              : null,
+      left:
+          layout['objectivesPosition'].containsKey('left')
+              ? layout['objectivesPosition']['left']
+              : null,
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: layout['panelMaxWidth'],
-        ),
+        constraints: BoxConstraints(maxWidth: layout['panelMaxWidth']),
         padding: padding,
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: opacity),
@@ -226,19 +288,25 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             if (!showCompact) ...[
               Text(
                 'Objectives',
-                style: responsive.getTextStyle(context, 'subtitle', color: Color(0xFFFFC107), fontWeight: FontWeight.bold),
+                style: responsive.getTextStyle(
+                  context,
+                  'subtitle',
+                  color: Color(0xFFFFC107),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: responsive.getSpacing(context, type: 'small')),
               ...gameState.objectives.entries.take(6).map((entry) {
-                bool completed = gameState.objectivesCompleted[entry.key] ?? false;
+                bool completed =
+                    gameState.objectivesCompleted[entry.key] ?? false;
                 return Padding(
                   padding: EdgeInsets.only(bottom: 2),
                   child: Text(
                     '${completed ? "✓" : "•"} ${_getObjectiveText(entry.key, entry.value, showCompact)}',
                     style: responsive.getTextStyle(
-                        context,
-                        'caption',
-                        color: completed ? Color(0xFF4CAF50) : Colors.grey
+                      context,
+                      'caption',
+                      color: completed ? Color(0xFF4CAF50) : Colors.grey,
                     ),
                     maxLines: showCompact ? 1 : 2,
                     overflow: TextOverflow.ellipsis,
@@ -249,10 +317,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             if (showCompact || deviceType == DeviceType.phone) ...[
               Text(
                 'Objectives',
-                style: responsive.getTextStyle(context, 'subtitle', color: Color(0xFFFFC107), fontWeight: FontWeight.bold),
+                style: responsive.getTextStyle(
+                  context,
+                  'subtitle',
+                  color: Color(0xFFFFC107),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: responsive.getSpacing(context, type: 'small')),
-            ]
+            ],
           ],
         ),
       ),
@@ -262,17 +335,29 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   String _getObjectiveText(String key, bool completed, [bool compact = false]) {
     switch (key) {
       case 'pass_20_cars':
-        return compact ? 'Pass 20 cars' : 'Pass 20 cars ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : ""}';
+        return compact
+            ? 'Pass 20 cars'
+            : 'Pass 20 cars ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : ""}';
       case 'zero_crashes':
-        return compact ? 'Perfect safety' : 'Perfect safety (10+ cars) ${gameState.totalCarsPassed < 10 ? "(${gameState.totalCarsPassed}/10)" : ""}';
+        return compact
+            ? 'Perfect safety'
+            : 'Perfect safety (10+ cars) ${gameState.totalCarsPassed < 10 ? "(${gameState.totalCarsPassed}/10)" : ""}';
       case 'pass_50_cars':
-        return compact ? 'Pass 50 cars' : 'Pass 50 cars ${gameState.totalCarsPassed < 50 ? "(${gameState.totalCarsPassed}/50)" : ""}';
+        return compact
+            ? 'Pass 50 cars'
+            : 'Pass 50 cars ${gameState.totalCarsPassed < 50 ? "(${gameState.totalCarsPassed}/50)" : ""}';
       case 'efficiency_85':
-        return compact ? '85% efficiency' : '85% efficiency (20+ cars) ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : "(${gameState.getSuccessRate()}/85)"}';
+        return compact
+            ? '85% efficiency'
+            : '85% efficiency (20+ cars) ${gameState.totalCarsPassed < 20 ? "(${gameState.totalCarsPassed}/20)" : "(${gameState.getSuccessRate()}/85)"}';
       case 'pass_100_cars':
-        return compact ? 'Pass 100 cars' : 'Pass 100 cars ${gameState.totalCarsPassed < 100 ? "(${gameState.totalCarsPassed}/100)" : ""}';
+        return compact
+            ? 'Pass 100 cars'
+            : 'Pass 100 cars ${gameState.totalCarsPassed < 100 ? "(${gameState.totalCarsPassed}/100)" : ""}';
       case 'no_traffic_jams':
-        return compact ? 'Traffic master' : 'Traffic master (30+ cars) ${gameState.totalCarsPassed < 30 ? "(${gameState.totalCarsPassed}/30)" : ""}';
+        return compact
+            ? 'Traffic master'
+            : 'Traffic master (30+ cars) ${gameState.totalCarsPassed < 30 ? "(${gameState.totalCarsPassed}/30)" : ""}';
       default:
         return key;
     }
@@ -293,9 +378,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       bottom: layout['controlsPosition']['bottom'],
       left: layout['controlsPosition']['left'],
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: layout['panelMaxWidth'],
-        ),
+        constraints: BoxConstraints(maxWidth: layout['panelMaxWidth']),
         padding: padding,
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: opacity),
@@ -306,12 +389,32 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           children: [
             Text(
               'Controls',
-              style: responsive.getTextStyle(context, 'subtitle', color: Color(0xFFFFC107), fontWeight: FontWeight.bold),
+              style: responsive.getTextStyle(
+                context,
+                'subtitle',
+                color: Color(0xFFFFC107),
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            if (!showCompact) Text('Arrow Keys: Traffic Lights', style: responsive.getTextStyle(context, 'caption')),
-            if (!showCompact) Text('Space bar: Pause/Resume', style: responsive.getTextStyle(context, 'caption')),
-            if (!showCompact) Text('1-5 Keys: Change Difficulty', style: responsive.getTextStyle(context, 'caption')),
-            Text('Tap: Toggle Lights', style: responsive.getTextStyle(context, 'caption')),
+            if (!showCompact)
+              Text(
+                'Arrow Keys: Traffic Lights',
+                style: responsive.getTextStyle(context, 'caption'),
+              ),
+            if (!showCompact)
+              Text(
+                'Space bar: Pause/Resume',
+                style: responsive.getTextStyle(context, 'caption'),
+              ),
+            if (!showCompact)
+              Text(
+                '1-5 Keys: Change Difficulty',
+                style: responsive.getTextStyle(context, 'caption'),
+              ),
+            Text(
+              'Tap: Toggle Lights',
+              style: responsive.getTextStyle(context, 'caption'),
+            ),
           ],
         ),
       ),
@@ -330,7 +433,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-
           // Only show help button on desktop (not mobile)
           if (!isMobile(context)) ...[
             _buildControlButton(
@@ -370,7 +472,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
-  Widget _buildControlButton({required String icon, required VoidCallback onTap}) {
+  Widget _buildControlButton({
+    required String icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -380,10 +485,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey),
         ),
-        child: Text(
-          icon,
-          style: TextStyle(fontSize: 16),
-        ),
+        child: Text(icon, style: TextStyle(fontSize: 16)),
       ),
     );
   }
@@ -400,7 +502,12 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             children: [
               Text(
                 'GAME OVER',
-                style: responsive.getTextStyle(context, 'gameOver', color: Colors.red, fontWeight: FontWeight.bold),
+                style: responsive.getTextStyle(
+                  context,
+                  'gameOver',
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: responsive.getSpacing(context, type: 'medium')),
               Text(
@@ -423,11 +530,14 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                     final personalBest = snapshot.data!;
                     final isNewRecord = gameState.score > personalBest;
                     return Text(
-                      isNewRecord ? '🎉 NEW PERSONAL BEST! 🎉' : 'Personal Best: $personalBest',
+                      isNewRecord
+                          ? '🎉 NEW PERSONAL BEST! 🎉'
+                          : 'Personal Best: $personalBest',
                       style: responsive.getTextStyle(
-                          context,
-                          'body',
-                          color: isNewRecord ? Color(0xFFFFD700) : Color(0xFFC8FFC8)
+                        context,
+                        'body',
+                        color:
+                            isNewRecord ? Color(0xFFFFD700) : Color(0xFFC8FFC8),
                       ),
                       textAlign: TextAlign.center,
                     );
@@ -440,12 +550,20 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               if (AuthService().isAuthenticated)
                 Text(
                   '✓ Score saved to leaderboard',
-                  style: responsive.getTextStyle(context, 'body', color: Color(0xFF4CAF50)),
+                  style: responsive.getTextStyle(
+                    context,
+                    'body',
+                    color: Color(0xFF4CAF50),
+                  ),
                 )
               else
                 Text(
                   'Sign in to save your score!',
-                  style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFC107)),
+                  style: responsive.getTextStyle(
+                    context,
+                    'body',
+                    color: Color(0xFFFFC107),
+                  ),
                 ),
 
               SizedBox(height: responsive.getSpacing(context, type: 'large')),
@@ -464,9 +582,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       }
                     },
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: AuthService().isAuthenticated ? Color(0xFFFF5722) : Color(0xFF2196F3),
+                        color:
+                            AuthService().isAuthenticated
+                                ? Color(0xFFFF5722)
+                                : Color(0xFF2196F3),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -488,7 +612,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                     GestureDetector(
                       onTap: () => showLeaderboard(context),
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: Color(0xFFFFD700),
                           borderRadius: BorderRadius.circular(20),
@@ -533,11 +660,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.refresh,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                      Icon(Icons.refresh, color: Colors.white, size: 24),
                       SizedBox(width: 8),
                       Text(
                         'RESTART',
@@ -554,7 +677,11 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               SizedBox(height: 16),
               Text(
                 'Tap button above or press R to restart',
-                style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFFF64)),
+                style: responsive.getTextStyle(
+                  context,
+                  'body',
+                  color: Color(0xFFFFFF64),
+                ),
               ),
             ],
           ),
@@ -575,7 +702,12 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             children: [
               Text(
                 'PAUSED',
-                style: responsive.getTextStyle(context, 'pause', color: Colors.black, fontWeight: FontWeight.bold),
+                style: responsive.getTextStyle(
+                  context,
+                  'pause',
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 30),
               // Resume button
@@ -604,11 +736,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                      Icon(Icons.play_arrow, color: Colors.white, size: 18),
                       SizedBox(width: 6),
                       Text(
                         'Resume',
@@ -629,7 +757,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   final Uri url = Uri.parse('https://blog.tuesdae.games');
                   try {
                     if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      );
                     } else {
                       // Fallback for web or if launching fails
                       if (mounted) {
@@ -672,11 +803,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                      Icon(Icons.info_outline, color: Colors.white, size: 18),
                       SizedBox(width: 6),
                       Text(
                         'About',
@@ -704,7 +831,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   width: 160,
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AuthService().isAuthenticated ? Color(0xFFFF5722) : Color(0xFFFFD700),
+                    color:
+                        AuthService().isAuthenticated
+                            ? Color(0xFFFF5722)
+                            : Color(0xFFFFD700),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.black, width: 2),
                     boxShadow: [
@@ -720,15 +850,23 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        AuthService().isAuthenticated ? Icons.logout : Icons.login,
-                        color: AuthService().isAuthenticated ? Colors.white : Colors.black,
+                        AuthService().isAuthenticated
+                            ? Icons.logout
+                            : Icons.login,
+                        color:
+                            AuthService().isAuthenticated
+                                ? Colors.white
+                                : Colors.black,
                         size: 18,
                       ),
                       SizedBox(width: 6),
                       Text(
                         AuthService().isAuthenticated ? 'Sign Out' : 'Sign In',
                         style: TextStyle(
-                          color: AuthService().isAuthenticated ? Colors.white : Colors.black,
+                          color:
+                              AuthService().isAuthenticated
+                                  ? Colors.white
+                                  : Colors.black,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -737,6 +875,44 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   ),
                 ),
               ),
+              SizedBox(height: 16),
+              // Profile button (only if authenticated)
+              if (AuthService().isAuthenticated)
+                GestureDetector(
+                  onTap: () => _openProfileInNewWindow(),
+                  child: Container(
+                    width: 160,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF673AB7), // Deep purple color
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.person, color: Colors.white, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          'My Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               SizedBox(height: 16),
               // Leaderboard button (only if authenticated)
               if (AuthService().isAuthenticated)
@@ -761,11 +937,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.emoji_events,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        Icon(Icons.emoji_events, color: Colors.white, size: 18),
                         SizedBox(width: 6),
                         Text(
                           'Leaderboard',
@@ -784,14 +956,16 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AuthService().isAuthenticated
-                      ? Color(0xFF4CAF50).withValues(alpha: 0.2)
-                      : Color(0xFFFFC107).withValues(alpha: 0.2),
+                  color:
+                      AuthService().isAuthenticated
+                          ? Color(0xFF4CAF50).withValues(alpha: 0.2)
+                          : Color(0xFFFFC107).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AuthService().isAuthenticated
-                        ? Color(0xFF4CAF50)
-                        : Color(0xFFFFC107),
+                    color:
+                        AuthService().isAuthenticated
+                            ? Color(0xFF4CAF50)
+                            : Color(0xFFFFC107),
                     width: 1,
                   ),
                 ),
@@ -834,7 +1008,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           mobileManager.lightHaptic();
         });
         return KeyEventResult.handled;
-
       } else if (key == LogicalKeyboardKey.arrowDown) {
         setState(() {
           gameState.toggleTrafficLight(Direction.south);
@@ -897,7 +1070,8 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
           AnalyticsService.logDifficultyChange('insane');
         });
         return KeyEventResult.handled;
-      } else if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.escape) {
+      } else if (key == LogicalKeyboardKey.space ||
+          key == LogicalKeyboardKey.escape) {
         if (!gameState.gameStarted) {
           setState(() {
             gameState.startGame();
@@ -954,7 +1128,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
             child: SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
                 ),
                 child: IntrinsicHeight(
                   child: Column(
@@ -963,8 +1140,12 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       // Game Cover Image
                       Container(
                         constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.65, // Max 65% of screen height
-                          maxWidth: MediaQuery.of(context).size.width * 0.9,    // Max 90% of screen width
+                          maxHeight:
+                              MediaQuery.of(context).size.height *
+                              0.65, // Max 65% of screen height
+                          maxWidth:
+                              MediaQuery.of(context).size.width *
+                              0.9, // Max 90% of screen width
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
@@ -985,14 +1166,21 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                               // Fallback to text title if image fails to load
                               return Container(
                                 constraints: BoxConstraints(
-                                  maxHeight: MediaQuery.of(context).size.height * 0.65,
-                                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                                  maxHeight:
+                                      MediaQuery.of(context).size.height * 0.65,
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width * 0.9,
                                 ),
                                 padding: EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFF77ACA2).withValues(alpha: 0.3),
+                                  color: Color(
+                                    0xFF77ACA2,
+                                  ).withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                    width: 2,
+                                  ),
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1007,7 +1195,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                                           Shadow(
                                             offset: Offset(2, 2),
                                             blurRadius: 5,
-                                            color: Colors.black.withValues(alpha: 0.7),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.7,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1016,7 +1206,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                                     Text(
                                       'Just another Tuesdae traffic scene',
                                       style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
                                         fontSize: 16,
                                         fontStyle: FontStyle.italic,
                                       ),
@@ -1034,18 +1226,25 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       // Compact Instructions Section (max 20% screen height)
                       Container(
                         constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.2, // Max 20% of screen height
+                          maxHeight:
+                              MediaQuery.of(context).size.height *
+                              0.2, // Max 20% of screen height
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             // Start Instructions
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -1072,7 +1271,10 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
 
                             // Quick controls hint
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Color(0xFF77ACA2).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -1082,7 +1284,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                                   Text(
                                     '🎮 Arrow Keys: Traffic Lights • 1-5: Difficulty',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       fontSize: 12,
                                     ),
                                     textAlign: TextAlign.center,
@@ -1090,7 +1294,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                                   Text(
                                     'Control traffic flow • Prevent crashes and jams!',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       fontSize: 11,
                                     ),
                                     textAlign: TextAlign.center,
@@ -1120,7 +1326,6 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     super.dispose();
   }
 
-
   Widget _buildMobileHelpButton() {
     return Positioned(
       bottom: 20,
@@ -1135,6 +1340,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       ),
     );
   }
+
   // Authentication methods
   void _showSignInDialog() {
     final TextEditingController emailController = TextEditingController();
@@ -1193,7 +1399,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   decoration: InputDecoration(
                     labelText: 'Email',
                     labelStyle: TextStyle(color: Colors.white54),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     prefixIcon: Icon(Icons.email, color: Colors.white),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.white54),
@@ -1216,21 +1424,26 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Cancel', style: TextStyle(color: Colors.redAccent)),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () async {
                         final email = emailController.text.trim();
                         if (email.isNotEmpty && email.contains('@')) {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             await AuthService().sendOtp(email);
                             if (mounted) {
-                              Navigator.of(context).pop();
+                              navigator.pop();
                               _showOtpDialog(email);
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Failed to send code: $e'),
                                   backgroundColor: Colors.red,
@@ -1250,7 +1463,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                         }
                       },
                       style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(Color(0xFF4CAF50)),
+                        backgroundColor: WidgetStateProperty.all(
+                          Color(0xFF4CAF50),
+                        ),
                       ),
                       child: Text('Send Code'),
                     ),
@@ -1322,7 +1537,11 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                 SizedBox(height: 8),
                 Text(
                   email,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 SizedBox(height: 16),
                 TextField(
@@ -1339,7 +1558,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   decoration: InputDecoration(
                     labelText: 'Verification Code',
                     labelStyle: TextStyle(color: Colors.white54),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     prefixIcon: Icon(Icons.security, color: Colors.white),
                     counterText: '', // Hide character counter
                     enabledBorder: OutlineInputBorder(
@@ -1357,15 +1578,19 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Cancel', style: TextStyle(color: Colors.redAccent)),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
                     ),
                     TextButton(
                       onPressed: () async {
                         // Resend OTP
+                        final messenger = ScaffoldMessenger.of(context);
                         try {
                           await AuthService().sendOtp(email);
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                 content: Text('New code sent to $email'),
                                 backgroundColor: Colors.blue,
@@ -1374,7 +1599,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                           }
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                 content: Text('Failed to resend code: $e'),
                                 backgroundColor: Colors.red,
@@ -1383,22 +1608,27 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                           }
                         }
                       },
-                      child: Text('Resend', style: TextStyle(color: Colors.blue)),
+                      child: Text(
+                        'Resend',
+                        style: TextStyle(color: Colors.blue),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () async {
                         final otp = otpController.text.trim();
                         if (otp.length == 6) {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             await AuthService().verifyOtp(email, otp);
                             if (mounted) {
-                              Navigator.of(context).pop();
+                              navigator.pop();
                               setState(() {}); // Refresh UI
 
                               // Sync local scores when user signs in
                               await ScoreService().syncLocalScores();
 
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Successfully signed in!'),
                                   backgroundColor: Colors.green,
@@ -1407,9 +1637,11 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('Invalid code. Please try again.'),
+                                  content: Text(
+                                    'Invalid code. Please try again.',
+                                  ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -1427,7 +1659,9 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                         }
                       },
                       style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(Color(0xFF4CAF50)),
+                        backgroundColor: WidgetStateProperty.all(
+                          Color(0xFF4CAF50),
+                        ),
                       ),
                       child: Text('Verify'),
                     ),
@@ -1439,6 +1673,40 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         );
       },
     );
+  }
+
+  void _openProfileInNewWindow() async {
+    try {
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser != null && currentUser.email != null) {
+        // Get current base URL
+        final String baseUrl = Uri.base.toString();
+        final String profileUrl = '$baseUrl#/player/${currentUser.email}';
+
+        final Uri url = Uri.parse(profileUrl);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not open profile'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open profile: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _signOut() async {

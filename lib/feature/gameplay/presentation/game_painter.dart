@@ -56,56 +56,63 @@ class GamePainter extends CustomPainter {
       // Tile the grass texture image in a 2x2 pattern with mirroring for seamless look
       double tileWidth = size.width / 2;
       double tileHeight = size.height / 2;
-      
+
       // Draw 4 tiles with different mirror orientations
       for (int row = 0; row < 2; row++) {
         for (int col = 0; col < 2; col++) {
           double x = col * tileWidth;
           double y = row * tileHeight;
-          
+
           canvas.save();
-          
+
           // Apply transformations based on tile position
-          canvas.translate(x + tileWidth / 2, y + tileHeight / 2); // Move to tile center
-          
+          canvas.translate(
+            x + tileWidth / 2,
+            y + tileHeight / 2,
+          ); // Move to tile center
+
           if (row == 0 && col == 1) {
             // Second tile of first row: Mirror horizontally
             canvas.scale(-1, 1);
           } else if (row == 1 && col == 0) {
-            // First tile of second row: Mirror vertically  
+            // First tile of second row: Mirror vertically
             canvas.scale(1, -1);
           } else if (row == 1 && col == 1) {
             // Second tile of second row: Mirror both horizontally and vertically
             canvas.scale(-1, -1);
           }
           // First tile (row 0, col 0) remains original - no scaling
-          
-          canvas.translate(-tileWidth / 2, -tileHeight / 2); // Move back from center
-          
+
+          canvas.translate(
+            -tileWidth / 2,
+            -tileHeight / 2,
+          ); // Move back from center
+
           paintImage(
             canvas: canvas,
             rect: Rect.fromLTWH(0, 0, tileWidth, tileHeight),
             image: backgroundImage!,
             fit: BoxFit.cover,
           );
-          
+
           canvas.restore();
         }
       }
     } else {
       // Fallback to gradient if image hasn't loaded yet
-      final paint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1B5E20), // Dark green
-            Color(0xFF2E7D32), // Medium green
-            Color(0xFF388E3C), // Forest green
-            Color(0xFF43A047), // Light green
-          ],
-          stops: [0.0, 0.3, 0.7, 1.0],
-        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      final paint =
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1B5E20), // Dark green
+                Color(0xFF2E7D32), // Medium green
+                Color(0xFF388E3C), // Forest green
+                Color(0xFF43A047), // Light green
+              ],
+              stops: [0.0, 0.3, 0.7, 1.0],
+            ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
       canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
     }
@@ -116,11 +123,17 @@ class GamePainter extends CustomPainter {
 
   void _drawBackgroundTexture(Canvas canvas, Size size) {
     // Create subtle grass-like texture with small dots (reduced when using real texture)
-    final texturePaint = Paint()
-      ..color = Color(0xFF4CAF50).withValues(alpha: backgroundImage != null ? 0.1 : 0.3);
+    final texturePaint =
+        Paint()
+          ..color = Color(
+            0xFF4CAF50,
+          ).withValues(alpha: backgroundImage != null ? 0.1 : 0.3);
 
     math.Random random = math.Random(42); // Fixed seed for consistent pattern
-    int dotCount = backgroundImage != null ? 50 : 200; // Fewer dots when using real texture
+    int dotCount =
+        backgroundImage != null
+            ? 50
+            : 200; // Fewer dots when using real texture
     for (int i = 0; i < dotCount; i++) {
       double x = random.nextDouble() * size.width;
       double y = random.nextDouble() * size.height;
@@ -135,18 +148,20 @@ class GamePainter extends CustomPainter {
       // Top left area
       TreeData(50, 50, 18), TreeData(120, 40, 22), TreeData(90, 120, 20),
       TreeData(160, 100, 19), TreeData(200, 60, 24), TreeData(250, 130, 17),
-      
+
       // Top right area (scaled to screen width)
       TreeData(size.width - 250, 70, 23), TreeData(size.width - 180, 45, 18),
       TreeData(size.width - 120, 90, 20), TreeData(size.width - 210, 140, 25),
-      
+
       // Bottom left area
       TreeData(80, size.height - 180, 20), TreeData(150, size.height - 150, 24),
       TreeData(200, size.height - 120, 18), TreeData(120, size.height - 80, 19),
-      
+
       // Bottom right area
-      TreeData(size.width - 220, size.height - 160, 21), TreeData(size.width - 150, size.height - 130, 17),
-      TreeData(size.width - 80, size.height - 180, 24), TreeData(size.width - 180, size.height - 80, 18),
+      TreeData(size.width - 220, size.height - 160, 21),
+      TreeData(size.width - 150, size.height - 130, 17),
+      TreeData(size.width - 80, size.height - 180, 24),
+      TreeData(size.width - 180, size.height - 80, 18),
     ];
 
     for (TreeData tree in trees) {
@@ -155,9 +170,12 @@ class GamePainter extends CustomPainter {
 
     // Draw bushes
     List<BushData> bushes = [
-      BushData(centerX - 100, 80), BushData(centerX - 50, 70),
-      BushData(centerX + 50, 85), BushData(centerX + 100, 75),
-      BushData(centerX - 80, size.height - 80), BushData(centerX + 80, size.height - 80),
+      BushData(centerX - 100, 80),
+      BushData(centerX - 50, 70),
+      BushData(centerX + 50, 85),
+      BushData(centerX + 100, 75),
+      BushData(centerX - 80, size.height - 80),
+      BushData(centerX + 80, size.height - 80),
     ];
 
     for (BushData bush in bushes) {
@@ -167,8 +185,7 @@ class GamePainter extends CustomPainter {
 
   void _drawTree(Canvas canvas, double x, double y, double size) {
     // Tree trunk
-    final trunkPaint = Paint()
-      ..color = Color(0xFF654321); // Brown
+    final trunkPaint = Paint()..color = Color(0xFF654321); // Brown
     canvas.drawRect(
       Rect.fromCenter(center: Offset(x, y), width: size / 4, height: size / 2),
       trunkPaint,
@@ -179,10 +196,18 @@ class GamePainter extends CustomPainter {
     canvas.drawCircle(Offset(x, y - size / 4), size / 2, foliage1Paint);
 
     final foliage2Paint = Paint()..color = Color(0xFF388E3C); // Medium green
-    canvas.drawCircle(Offset(x - size / 6, y - size / 3), size * 0.4, foliage2Paint);
+    canvas.drawCircle(
+      Offset(x - size / 6, y - size / 3),
+      size * 0.4,
+      foliage2Paint,
+    );
 
     final foliage3Paint = Paint()..color = Color(0xFF4CAF50); // Light green
-    canvas.drawCircle(Offset(x + size / 6, y - size / 4), size * 0.35, foliage3Paint);
+    canvas.drawCircle(
+      Offset(x + size / 6, y - size / 4),
+      size * 0.35,
+      foliage3Paint,
+    );
   }
 
   void _drawBush(Canvas canvas, double x, double y) {
@@ -197,18 +222,27 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawRoads(Canvas canvas, Size size) {
-    final roadPaint = Paint()
-      ..color = Color(0xFF34495E); // Dark road color
+    final roadPaint = Paint()..color = Color(0xFF34495E); // Dark road color
 
     // Horizontal road
     canvas.drawRect(
-      Rect.fromLTWH(0, centerY - gameState.roadWidth / 2, size.width, gameState.roadWidth),
+      Rect.fromLTWH(
+        0,
+        centerY - gameState.roadWidth / 2,
+        size.width,
+        gameState.roadWidth,
+      ),
       roadPaint,
     );
 
     // Vertical road
     canvas.drawRect(
-      Rect.fromLTWH(centerX - gameState.roadWidth / 2, 0, gameState.roadWidth, size.height),
+      Rect.fromLTWH(
+        centerX - gameState.roadWidth / 2,
+        0,
+        gameState.roadWidth,
+        size.height,
+      ),
       roadPaint,
     );
 
@@ -217,17 +251,20 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawRoadMarkings(Canvas canvas, Size size) {
-    final edgeLinePaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 3;
+    final edgeLinePaint =
+        Paint()
+          ..color = Colors.white
+          ..strokeWidth = 3;
 
-    final centerLinePaint = Paint()
-      ..color = Color(0xFFF1C40F) // Yellow
-      ..strokeWidth = 3;
+    final centerLinePaint =
+        Paint()
+          ..color = Color(0xFFF1C40F) // Yellow
+          ..strokeWidth = 3;
 
-    final laneDividerPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 2;
+    final laneDividerPaint =
+        Paint()
+          ..color = Colors.white
+          ..strokeWidth = 2;
 
     // Horizontal road edges
     canvas.drawLine(
@@ -255,7 +292,8 @@ class GamePainter extends CustomPainter {
 
     // Horizontal road center line (dashed)
     for (double x = 0; x < size.width; x += 30) {
-      if (x < centerX - gameState.intersectionSize / 2 || x > centerX + gameState.intersectionSize / 2) {
+      if (x < centerX - gameState.intersectionSize / 2 ||
+          x > centerX + gameState.intersectionSize / 2) {
         canvas.drawLine(
           Offset(x, centerY),
           Offset(x + 15, centerY),
@@ -266,7 +304,8 @@ class GamePainter extends CustomPainter {
 
     // Vertical road center line (dashed)
     for (double y = 0; y < size.height; y += 30) {
-      if (y < centerY - gameState.intersectionSize / 2 || y > centerY + gameState.intersectionSize / 2) {
+      if (y < centerY - gameState.intersectionSize / 2 ||
+          y > centerY + gameState.intersectionSize / 2) {
         canvas.drawLine(
           Offset(centerX, y),
           Offset(centerX, y + 15),
@@ -277,7 +316,8 @@ class GamePainter extends CustomPainter {
 
     // Lane dividers (dashed)
     for (double x = 0; x < size.width; x += 25) {
-      if (x < centerX - gameState.intersectionSize / 2 || x > centerX + gameState.intersectionSize / 2) {
+      if (x < centerX - gameState.intersectionSize / 2 ||
+          x > centerX + gameState.intersectionSize / 2) {
         // Upper lane divider
         canvas.drawLine(
           Offset(x, centerY - gameState.roadWidth / 4),
@@ -294,7 +334,8 @@ class GamePainter extends CustomPainter {
     }
 
     for (double y = 0; y < size.height; y += 25) {
-      if (y < centerY - gameState.intersectionSize / 2 || y > centerY + gameState.intersectionSize / 2) {
+      if (y < centerY - gameState.intersectionSize / 2 ||
+          y > centerY + gameState.intersectionSize / 2) {
         // Left lane divider
         canvas.drawLine(
           Offset(centerX - gameState.roadWidth / 4, y),
@@ -312,8 +353,8 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawIntersection(Canvas canvas, Size size) {
-    final intersectionPaint = Paint()
-      ..color = Color(0xFF34495E); // Match road color
+    final intersectionPaint =
+        Paint()..color = Color(0xFF34495E); // Match road color
 
     canvas.drawRect(
       Rect.fromCenter(
@@ -329,9 +370,10 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawCrosswalks(Canvas canvas) {
-    final crosswalkPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 4;
+    final crosswalkPaint =
+        Paint()
+          ..color = Colors.white
+          ..strokeWidth = 4;
 
     // Crosswalk stripes - North side
     for (int i = 0; i < 6; i++) {
@@ -377,10 +419,26 @@ class GamePainter extends CustomPainter {
   void _drawTrafficLights(Canvas canvas, Size size) {
     double lightDistance = 120;
 
-    _drawTrafficLight(canvas, Offset(centerX, centerY - lightDistance), gameState.trafficLights[Direction.north]!);
-    _drawTrafficLight(canvas, Offset(centerX, centerY + lightDistance), gameState.trafficLights[Direction.south]!);
-    _drawTrafficLight(canvas, Offset(centerX + lightDistance, centerY), gameState.trafficLights[Direction.east]!);
-    _drawTrafficLight(canvas, Offset(centerX - lightDistance, centerY), gameState.trafficLights[Direction.west]!);
+    _drawTrafficLight(
+      canvas,
+      Offset(centerX, centerY - lightDistance),
+      gameState.trafficLights[Direction.north]!,
+    );
+    _drawTrafficLight(
+      canvas,
+      Offset(centerX, centerY + lightDistance),
+      gameState.trafficLights[Direction.south]!,
+    );
+    _drawTrafficLight(
+      canvas,
+      Offset(centerX + lightDistance, centerY),
+      gameState.trafficLights[Direction.east]!,
+    );
+    _drawTrafficLight(
+      canvas,
+      Offset(centerX - lightDistance, centerY),
+      gameState.trafficLights[Direction.west]!,
+    );
   }
 
   void _drawTrafficLight(Canvas canvas, Offset position, LightState state) {
@@ -388,23 +446,30 @@ class GamePainter extends CustomPainter {
     double housingHeight = 90;
 
     // Light post
-    final postPaint = Paint()
-      ..color = Color(0xFF7F8C8D); // Gray post
+    final postPaint = Paint()..color = Color(0xFF7F8C8D); // Gray post
     canvas.drawRect(
-      Rect.fromCenter(center: Offset(position.dx, position.dy + housingHeight / 2 + 20), width: 4, height: 40),
+      Rect.fromCenter(
+        center: Offset(position.dx, position.dy + housingHeight / 2 + 20),
+        width: 4,
+        height: 40,
+      ),
       postPaint,
     );
 
     // Light housing
-    final housingPaint = Paint()
-      ..color = Color(0xFF2C3E50);
-    final housingStrokePaint = Paint()
-      ..color = Color(0xFF34495E)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+    final housingPaint = Paint()..color = Color(0xFF2C3E50);
+    final housingStrokePaint =
+        Paint()
+          ..color = Color(0xFF34495E)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
 
     RRect housing = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: position, width: housingWidth, height: housingHeight),
+      Rect.fromCenter(
+        center: position,
+        width: housingWidth,
+        height: housingHeight,
+      ),
       Radius.circular(8),
     );
     canvas.drawRRect(housing, housingPaint);
@@ -413,31 +478,50 @@ class GamePainter extends CustomPainter {
     double lightSpacing = 22;
 
     // Red light (top)
-    Color redColor = state == LightState.red ? Color(0xFFFF453A) : Color(0xFF8B4545);
+    Color redColor =
+        state == LightState.red ? Color(0xFFFF453A) : Color(0xFF8B4545);
     final redPaint = Paint()..color = redColor;
-    canvas.drawCircle(Offset(position.dx, position.dy - lightSpacing), 8, redPaint);
+    canvas.drawCircle(
+      Offset(position.dx, position.dy - lightSpacing),
+      8,
+      redPaint,
+    );
 
     // Add glow effect for active red light
     if (state == LightState.red) {
-      final glowPaint = Paint()
-        ..color = Color(0xFFFF453A).withValues(alpha: 0.4);
-      canvas.drawCircle(Offset(position.dx, position.dy - lightSpacing), 12, glowPaint);
+      final glowPaint =
+          Paint()..color = Color(0xFFFF453A).withValues(alpha: 0.4);
+      canvas.drawCircle(
+        Offset(position.dx, position.dy - lightSpacing),
+        12,
+        glowPaint,
+      );
     }
 
     // Yellow light (middle) - always dim
-    final yellowPaint = Paint()..color = Color(0xFFF4D03F).withValues(alpha: 0.4);
+    final yellowPaint =
+        Paint()..color = Color(0xFFF4D03F).withValues(alpha: 0.4);
     canvas.drawCircle(Offset(position.dx, position.dy), 8, yellowPaint);
 
     // Green light (bottom)
-    Color greenColor = state == LightState.green ? Color(0xFF2E7D32) : Color(0xFF458B45);
+    Color greenColor =
+        state == LightState.green ? Color(0xFF2E7D32) : Color(0xFF458B45);
     final greenPaint = Paint()..color = greenColor;
-    canvas.drawCircle(Offset(position.dx, position.dy + lightSpacing), 8, greenPaint);
+    canvas.drawCircle(
+      Offset(position.dx, position.dy + lightSpacing),
+      8,
+      greenPaint,
+    );
 
     // Add glow effect for active green light
     if (state == LightState.green) {
-      final glowPaint = Paint()
-        ..color = Color(0xFF2E7D32).withValues(alpha: 0.4);
-      canvas.drawCircle(Offset(position.dx, position.dy + lightSpacing), 12, glowPaint);
+      final glowPaint =
+          Paint()..color = Color(0xFF2E7D32).withValues(alpha: 0.4);
+      canvas.drawCircle(
+        Offset(position.dx, position.dy + lightSpacing),
+        12,
+        glowPaint,
+      );
     }
   }
 
@@ -460,12 +544,12 @@ class GamePainter extends CustomPainter {
     }
 
     // Car body
-    final carPaint = Paint()
-      ..color = car.color;
-    final carStrokePaint = Paint()
-      ..color = Color(0xFF1E1E1E)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+    final carPaint = Paint()..color = car.color;
+    final carStrokePaint =
+        Paint()
+          ..color = Color(0xFF1E1E1E)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5;
 
     RRect carBody = RRect.fromRectAndRadius(
       Rect.fromCenter(center: Offset.zero, width: carWidth, height: carHeight),
@@ -475,11 +559,15 @@ class GamePainter extends CustomPainter {
     canvas.drawRRect(carBody, carStrokePaint);
 
     // Front windshield
-    final windshieldPaint = Paint()
-      ..color = Color(0xFFC8DCFF).withValues(alpha: 0.7);
+    final windshieldPaint =
+        Paint()..color = Color(0xFFC8DCFF).withValues(alpha: 0.7);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(0, -carHeight / 4), width: carWidth * 0.8, height: carHeight / 3),
+        Rect.fromCenter(
+          center: Offset(0, -carHeight / 4),
+          width: carWidth * 0.8,
+          height: carHeight / 3,
+        ),
         Radius.circular(2),
       ),
       windshieldPaint,
@@ -488,7 +576,11 @@ class GamePainter extends CustomPainter {
     // Rear windshield
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(0, carHeight / 4), width: carWidth * 0.8, height: carHeight / 3),
+        Rect.fromCenter(
+          center: Offset(0, carHeight / 4),
+          width: carWidth * 0.8,
+          height: carHeight / 3,
+        ),
         Radius.circular(2),
       ),
       windshieldPaint,
@@ -496,13 +588,29 @@ class GamePainter extends CustomPainter {
 
     // Headlights (white - at front)
     final headlightPaint = Paint()..color = Color(0xFFFFFFC8);
-    canvas.drawCircle(Offset(-carWidth / 3, -carHeight / 2 + 2), 2, headlightPaint);
-    canvas.drawCircle(Offset(carWidth / 3, -carHeight / 2 + 2), 2, headlightPaint);
+    canvas.drawCircle(
+      Offset(-carWidth / 3, -carHeight / 2 + 2),
+      2,
+      headlightPaint,
+    );
+    canvas.drawCircle(
+      Offset(carWidth / 3, -carHeight / 2 + 2),
+      2,
+      headlightPaint,
+    );
 
     // Taillights (red - at rear)
     final taillightPaint = Paint()..color = Color(0xFFFF3232);
-    canvas.drawCircle(Offset(-carWidth / 3, carHeight / 2 - 2), 1.5, taillightPaint);
-    canvas.drawCircle(Offset(carWidth / 3, carHeight / 2 - 2), 1.5, taillightPaint);
+    canvas.drawCircle(
+      Offset(-carWidth / 3, carHeight / 2 - 2),
+      1.5,
+      taillightPaint,
+    );
+    canvas.drawCircle(
+      Offset(carWidth / 3, carHeight / 2 - 2),
+      1.5,
+      taillightPaint,
+    );
 
     // Draw special effects based on car type
     _drawCarSpecialEffects(canvas, car, carWidth, carHeight);
@@ -510,7 +618,12 @@ class GamePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawCarSpecialEffects(Canvas canvas, Car car, double carWidth, double carHeight) {
+  void _drawCarSpecialEffects(
+    Canvas canvas,
+    Car car,
+    double carWidth,
+    double carHeight,
+  ) {
     switch (car.type) {
       case CarType.ambulance:
         _drawAmbulanceEffects(canvas, carWidth, carHeight);
@@ -536,23 +649,26 @@ class GamePainter extends CustomPainter {
 
   void _drawAmbulanceEffects(Canvas canvas, double carWidth, double carHeight) {
     double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
-    
+
     // Flashing lights
     double redAlpha = 0.8 + 0.2 * math.sin(time * 8);
     double blueAlpha = 0.8 + 0.2 * math.sin(time * 8 + math.pi);
 
     // Red light (left side)
-    final redLightPaint = Paint()..color = Colors.red.withValues(alpha: redAlpha);
+    final redLightPaint =
+        Paint()..color = Colors.red.withValues(alpha: redAlpha);
     canvas.drawCircle(Offset(-8, -16), 3, redLightPaint);
 
     // Blue light (right side)
-    final blueLightPaint = Paint()..color = Colors.blue.withValues(alpha: blueAlpha);
+    final blueLightPaint =
+        Paint()..color = Colors.blue.withValues(alpha: blueAlpha);
     canvas.drawCircle(Offset(8, -16), 3, blueLightPaint);
 
     // Red cross symbol
-    final crossPaint = Paint()
-      ..color = Colors.red
-      ..strokeWidth = 2;
+    final crossPaint =
+        Paint()
+          ..color = Colors.red
+          ..strokeWidth = 2;
     canvas.drawLine(Offset(-4, 0), Offset(4, 0), crossPaint);
     canvas.drawLine(Offset(0, -4), Offset(0, 4), crossPaint);
 
@@ -569,21 +685,24 @@ class GamePainter extends CustomPainter {
 
   void _drawPoliceEffects(Canvas canvas, double carWidth, double carHeight) {
     double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
-    
+
     // Faster flashing lights
     double redAlpha = 0.9 + 0.1 * math.sin(time * 12);
     double blueAlpha = 0.9 + 0.1 * math.sin(time * 12 + math.pi);
 
     // Red light (left side)
-    final redLightPaint = Paint()..color = Colors.red.withValues(alpha: redAlpha);
+    final redLightPaint =
+        Paint()..color = Colors.red.withValues(alpha: redAlpha);
     canvas.drawCircle(Offset(-6, -16), 2.5, redLightPaint);
 
     // Blue light (right side)
-    final blueLightPaint = Paint()..color = Colors.blue.withValues(alpha: blueAlpha);
+    final blueLightPaint =
+        Paint()..color = Colors.blue.withValues(alpha: blueAlpha);
     canvas.drawCircle(Offset(6, -16), 2.5, blueLightPaint);
 
     // Police badge (star)
-    final badgePaint = Paint()..color = Color(0xFFFFD700).withValues(alpha: 0.6);
+    final badgePaint =
+        Paint()..color = Color(0xFFFFD700).withValues(alpha: 0.6);
     canvas.drawCircle(Offset.zero, 3, badgePaint);
 
     // "POLICE" text
@@ -614,10 +733,11 @@ class GamePainter extends CustomPainter {
 
   void _drawTractorEffects(Canvas canvas, double carWidth, double carHeight) {
     // Tractor treads
-    final treadPaint = Paint()
-      ..color = Color(0xFF282828)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+    final treadPaint =
+        Paint()
+          ..color = Color(0xFF282828)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3;
 
     // Left tread
     canvas.drawRRect(
@@ -650,8 +770,9 @@ class GamePainter extends CustomPainter {
     // Smoky exhaust
     double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
     double smokeAlpha = 0.3 + 0.2 * math.sin(time * 2);
-    
-    final smokePaint = Paint()..color = Color(0xFF505050).withValues(alpha: smokeAlpha);
+
+    final smokePaint =
+        Paint()..color = Color(0xFF505050).withValues(alpha: smokeAlpha);
     canvas.drawCircle(Offset(0, -22), 4, smokePaint);
     canvas.drawCircle(Offset(3, -24), 3, smokePaint);
     canvas.drawCircle(Offset(0, -26), 2, smokePaint);
@@ -678,24 +799,49 @@ class GamePainter extends CustomPainter {
 
     // Black stripes
     final stripePaint = Paint()..color = Colors.black;
-    canvas.drawRect(Rect.fromLTWH(-busHalfLength, -8, carHeight, 2), stripePaint);
-    canvas.drawRect(Rect.fromLTWH(-busHalfLength, 8, carHeight, 2), stripePaint);
+    canvas.drawRect(
+      Rect.fromLTWH(-busHalfLength, -8, carHeight, 2),
+      stripePaint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(-busHalfLength, 8, carHeight, 2),
+      stripePaint,
+    );
 
     // Stop sign arm (intermittent)
     if (math.sin(time * 4) > 0.5) {
       final stopSignPaint = Paint()..color = Colors.red;
-      final stopSignStrokePaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1;
+      final stopSignStrokePaint =
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1;
 
-      canvas.drawRect(Rect.fromCenter(center: Offset(busHalfLength - 2, 0), width: 12, height: 8), stopSignPaint);
-      canvas.drawRect(Rect.fromCenter(center: Offset(busHalfLength - 2, 0), width: 12, height: 8), stopSignStrokePaint);
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(busHalfLength - 2, 0),
+          width: 12,
+          height: 8,
+        ),
+        stopSignPaint,
+      );
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(busHalfLength - 2, 0),
+          width: 12,
+          height: 8,
+        ),
+        stopSignStrokePaint,
+      );
 
       final textPainter = TextPainter(
         text: TextSpan(
           text: 'STOP',
-          style: TextStyle(color: Colors.white, fontSize: 4, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 4,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         textDirection: TextDirection.ltr,
       );
@@ -705,7 +851,8 @@ class GamePainter extends CustomPainter {
 
     // Flashing red lights
     double redAlpha = 0.8 + 0.2 * math.sin(time * 6);
-    final flashingPaint = Paint()..color = Colors.red.withValues(alpha: redAlpha);
+    final flashingPaint =
+        Paint()..color = Colors.red.withValues(alpha: redAlpha);
 
     canvas.drawCircle(Offset(-busHalfLength + 2, -6), 2, flashingPaint);
     canvas.drawCircle(Offset(-busHalfLength + 2, 6), 2, flashingPaint);
@@ -716,7 +863,11 @@ class GamePainter extends CustomPainter {
     final schoolTextPainter = TextPainter(
       text: TextSpan(
         text: 'SCHOOL BUS',
-        style: TextStyle(color: Colors.black, fontSize: 6, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 6,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -727,7 +878,11 @@ class GamePainter extends CustomPainter {
     final cautionTextPainter = TextPainter(
       text: TextSpan(
         text: 'CAUTION',
-        style: TextStyle(color: Colors.red, fontSize: 4, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: Colors.red,
+          fontSize: 4,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -749,9 +904,10 @@ class GamePainter extends CustomPainter {
       double sparkX = math.cos(angle) * 15;
       double sparkY = math.sin(angle) * 15;
 
-      final sparkPaint = Paint()
-        ..color = Color(0xFFFF9600)
-        ..strokeWidth = 2;
+      final sparkPaint =
+          Paint()
+            ..color = Color(0xFFFF9600)
+            ..strokeWidth = 2;
       canvas.drawLine(Offset.zero, Offset(sparkX, sparkY), sparkPaint);
 
       final sparkDotPaint = Paint()..color = Color(0xFFFFC800);
@@ -767,14 +923,17 @@ class GamePainter extends CustomPainter {
 
   void _drawExplosion(Canvas canvas, CrashEffect effect) {
     double progress = 1 - (effect.timer / 60.0);
-    
+
     // Central explosion burst
     if (effect.timer > 30) {
       double burstAlpha = ((effect.timer - 30) / 30.0) * 0.6;
-      final burstPaint1 = Paint()..color = Color(0xFFFF6400).withValues(alpha: burstAlpha);
+      final burstPaint1 =
+          Paint()..color = Color(0xFFFF6400).withValues(alpha: burstAlpha);
       canvas.drawCircle(Offset(effect.x, effect.y), 15, burstPaint1);
 
-      final burstPaint2 = Paint()..color = Color(0xFFFFC800).withValues(alpha: burstAlpha * 0.7);
+      final burstPaint2 =
+          Paint()
+            ..color = Color(0xFFFFC800).withValues(alpha: burstAlpha * 0.7);
       canvas.drawCircle(Offset(effect.x, effect.y), 10, burstPaint2);
     }
 
@@ -783,13 +942,18 @@ class GamePainter extends CustomPainter {
       double angle = (i / 12) * 2 * math.pi;
       double distance = progress * 20;
       double particleX = effect.x + math.cos(angle) * distance;
-      double particleY = effect.y + math.sin(angle) * distance + progress * progress * 10; // Gravity
+      double particleY =
+          effect.y +
+          math.sin(angle) * distance +
+          progress * progress * 10; // Gravity
 
       double alpha = 1 - progress;
-      final particlePaint = Paint()..color = Color(0xFFFF9600).withValues(alpha: alpha);
+      final particlePaint =
+          Paint()..color = Color(0xFFFF9600).withValues(alpha: alpha);
       canvas.drawCircle(Offset(particleX, particleY), 2, particlePaint);
 
-      final innerParticlePaint = Paint()..color = Color(0xFFFFC800).withValues(alpha: alpha * 0.7);
+      final innerParticlePaint =
+          Paint()..color = Color(0xFFFFC800).withValues(alpha: alpha * 0.7);
       canvas.drawCircle(Offset(particleX, particleY), 1, innerParticlePaint);
     }
   }
@@ -797,11 +961,13 @@ class GamePainter extends CustomPainter {
   void _drawParticles(Canvas canvas) {
     for (Particle particle in gameState.particles) {
       double alpha = (particle.life / 45.0) * 0.8;
-      final particlePaint = Paint()..color = particle.color.withValues(alpha: alpha);
+      final particlePaint =
+          Paint()..color = particle.color.withValues(alpha: alpha);
       canvas.drawCircle(Offset(particle.x, particle.y), 2, particlePaint);
 
       // Add slight glow
-      final glowPaint = Paint()..color = particle.color.withValues(alpha: alpha * 0.3);
+      final glowPaint =
+          Paint()..color = particle.color.withValues(alpha: alpha * 0.3);
       canvas.drawCircle(Offset(particle.x, particle.y), 4, glowPaint);
     }
   }
@@ -809,7 +975,7 @@ class GamePainter extends CustomPainter {
   void _drawScorePopups(Canvas canvas) {
     for (ScorePopup popup in gameState.scorePopups) {
       double alpha = (popup.timer / 90.0);
-      
+
       // Enhanced text with glow for positive scores
       if (popup.text.contains('+')) {
         final glowPainter = TextPainter(
@@ -831,7 +997,13 @@ class GamePainter extends CustomPainter {
           textDirection: TextDirection.ltr,
         );
         glowPainter.layout();
-        glowPainter.paint(canvas, Offset(popup.x - glowPainter.width / 2, popup.y - glowPainter.height / 2));
+        glowPainter.paint(
+          canvas,
+          Offset(
+            popup.x - glowPainter.width / 2,
+            popup.y - glowPainter.height / 2,
+          ),
+        );
       }
 
       // Main text
@@ -854,7 +1026,13 @@ class GamePainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(popup.x - textPainter.width / 2, popup.y - textPainter.height / 2));
+      textPainter.paint(
+        canvas,
+        Offset(
+          popup.x - textPainter.width / 2,
+          popup.y - textPainter.height / 2,
+        ),
+      );
     }
   }
 

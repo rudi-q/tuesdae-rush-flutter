@@ -48,19 +48,24 @@ class DefaultFirebaseOptions {
   static const String _storageBucket = 'tuesdaerush.firebasestorage.app';
   static const String _authDomain = 'tuesdaerush.firebaseapp.com';
   static const String _measurementId = 'G-QDWQG17Z79';
-  
-  static const String _androidApiKey = 'AIzaSyBNgz5KrpuxrVxOJk02FSeRvWQDzdFdnPc';
-  static const String _androidAppId = '1:300081682240:android:a916c2a2370e5fa8e18ca5';
-  
+
+  static const String _androidApiKey =
+      'AIzaSyBNgz5KrpuxrVxOJk02FSeRvWQDzdFdnPc';
+  static const String _androidAppId =
+      '1:300081682240:android:a916c2a2370e5fa8e18ca5';
+
   static const String _iosApiKey = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
   static const String _iosAppId = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
-  
-  static const String _macosApiKey = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
+
+  static const String _macosApiKey =
+      '1:300081682240:ios:53dc1cec4c27c017e18ca5';
   static const String _macosAppId = '1:300081682240:ios:53dc1cec4c27c017e18ca5';
-  
-  static const String _windowsApiKey = 'AIzaSyARJjeYc4M0lIRbYVwFNBzhp6DoBl7yPIk';
-  static const String _windowsAppId = '1:300081682240:web:3252e3ab8e08ae76e18ca5';
-  
+
+  static const String _windowsApiKey =
+      'AIzaSyARJjeYc4M0lIRbYVwFNBzhp6DoBl7yPIk';
+  static const String _windowsAppId =
+      '1:300081682240:web:3252e3ab8e08ae76e18ca5';
+
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: _webApiKey,
     appId: _webAppId,

@@ -15,8 +15,9 @@ class MobileManager {
   Future<void> initialize() async {
     try {
       // Only enable vibration support on mobile platforms
-      _isVibrationSupported = defaultTargetPlatform == TargetPlatform.android || 
-                            defaultTargetPlatform == TargetPlatform.iOS;
+      _isVibrationSupported =
+          defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS;
     } catch (e) {
       debugPrint('Error checking vibration support: $e');
       _isVibrationSupported = false;
@@ -30,11 +31,12 @@ class MobileManager {
   /// Light haptic feedback for traffic light toggles
   Future<void> lightHaptic() async {
     if (!_hapticsEnabled) return;
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await HapticFeedback.lightImpact();
-      } else if (defaultTargetPlatform == TargetPlatform.android && _isVibrationSupported) {
+      } else if (defaultTargetPlatform == TargetPlatform.android &&
+          _isVibrationSupported) {
         // Use system haptic feedback on Android
         await HapticFeedback.lightImpact();
       }
@@ -46,11 +48,12 @@ class MobileManager {
   /// Medium haptic feedback for game events
   Future<void> mediumHaptic() async {
     if (!_hapticsEnabled) return;
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await HapticFeedback.mediumImpact();
-      } else if (defaultTargetPlatform == TargetPlatform.android && _isVibrationSupported) {
+      } else if (defaultTargetPlatform == TargetPlatform.android &&
+          _isVibrationSupported) {
         await HapticFeedback.mediumImpact();
       }
     } catch (e) {
@@ -61,11 +64,12 @@ class MobileManager {
   /// Heavy haptic feedback for crashes and errors
   Future<void> heavyHaptic() async {
     if (!_hapticsEnabled) return;
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await HapticFeedback.heavyImpact();
-      } else if (defaultTargetPlatform == TargetPlatform.android && _isVibrationSupported) {
+      } else if (defaultTargetPlatform == TargetPlatform.android &&
+          _isVibrationSupported) {
         await HapticFeedback.heavyImpact();
       }
     } catch (e) {
@@ -76,13 +80,14 @@ class MobileManager {
   /// Success haptic pattern for achievements
   Future<void> successHaptic() async {
     if (!_hapticsEnabled) return;
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await HapticFeedback.mediumImpact();
         await Future.delayed(Duration(milliseconds: 100));
         await HapticFeedback.lightImpact();
-      } else if (defaultTargetPlatform == TargetPlatform.android && _isVibrationSupported) {
+      } else if (defaultTargetPlatform == TargetPlatform.android &&
+          _isVibrationSupported) {
         await HapticFeedback.mediumImpact();
         await Future.delayed(Duration(milliseconds: 50));
         await HapticFeedback.lightImpact();
@@ -95,13 +100,14 @@ class MobileManager {
   /// Error haptic pattern for crashes
   Future<void> errorHaptic() async {
     if (!_hapticsEnabled) return;
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await HapticFeedback.heavyImpact();
         await Future.delayed(Duration(milliseconds: 150));
         await HapticFeedback.heavyImpact();
-      } else if (defaultTargetPlatform == TargetPlatform.android && _isVibrationSupported) {
+      } else if (defaultTargetPlatform == TargetPlatform.android &&
+          _isVibrationSupported) {
         await HapticFeedback.heavyImpact();
         await Future.delayed(Duration(milliseconds: 150));
         await HapticFeedback.heavyImpact();
@@ -114,11 +120,12 @@ class MobileManager {
   /// Selection haptic for UI interactions
   Future<void> selectionHaptic() async {
     if (!_hapticsEnabled) return;
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await HapticFeedback.selectionClick();
-      } else if (defaultTargetPlatform == TargetPlatform.android && _isVibrationSupported) {
+      } else if (defaultTargetPlatform == TargetPlatform.android &&
+          _isVibrationSupported) {
         await HapticFeedback.selectionClick();
       }
     } catch (e) {
@@ -128,17 +135,19 @@ class MobileManager {
 
   /// Check if device is mobile
   bool get isMobile {
-    return defaultTargetPlatform == TargetPlatform.android || 
-           defaultTargetPlatform == TargetPlatform.iOS;
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
   }
 
   /// Check if device is tablet (rough heuristic)
   bool isTablet(double screenWidth, double screenHeight) {
     if (!isMobile) return false;
-    
-    double minDimension = screenWidth < screenHeight ? screenWidth : screenHeight;
-    double maxDimension = screenWidth > screenHeight ? screenWidth : screenHeight;
-    
+
+    double minDimension =
+        screenWidth < screenHeight ? screenWidth : screenHeight;
+    double maxDimension =
+        screenWidth > screenHeight ? screenWidth : screenHeight;
+
     // Consider tablets to have minimum dimension > 600 and aspect ratio < 2:1
     return minDimension > 600 && (maxDimension / minDimension) < 2.0;
   }
@@ -146,14 +155,15 @@ class MobileManager {
   /// Get appropriate touch target size for device
   double getTouchTargetSize(double screenWidth, double screenHeight) {
     if (!isMobile) return 80; // Desktop default
-    
-    double minDimension = screenWidth < screenHeight ? screenWidth : screenHeight;
-    
+
+    double minDimension =
+        screenWidth < screenHeight ? screenWidth : screenHeight;
+
     if (isTablet(screenWidth, screenHeight)) {
       // Tablet: larger touch targets
       return (minDimension * 0.08).clamp(80, 120);
     } else {
-      // Phone: medium touch targets  
+      // Phone: medium touch targets
       return (minDimension * 0.12).clamp(80, 100);
     }
   }

@@ -16,6 +16,7 @@ dependencies:
   url_launcher: ^6.2.4
   supabase_flutter: ^2.3.4
   shared_preferences: ^2.2.2
+  go_router: ^14.2.7
 
 dev_dependencies:
   flutter_test:
