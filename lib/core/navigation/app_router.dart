@@ -1,9 +1,9 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/services/analytics_service.dart';
-import '../../feature/auth/auth_service.dart';
 import '../../feature/gameplay/presentation/game.dart';
 import '../../feature/profile/data/supabase_user_profile_datasource.dart';
 import '../../feature/profile/domain/entities/user_profile.dart';
@@ -138,15 +138,22 @@ class ProfileScreenWrapper extends StatelessWidget {
   }
 
   Future<UserProfile?> _loadUserProfile() async {
-    // Check if user is authenticated
-    if (!AuthService().isAuthenticated) {
-      throw Exception('You must be signed in to view profiles');
-    }
-
     final dataSource = SupabaseUserProfileDataSource();
 
-    // Get user profile by pseudonym
     try {
+      // Check if current user is authenticated and if this pseudonym belongs to them
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser != null) {
+        // First try to get the user's own profile to check if this pseudonym matches
+        final ownProfile = await dataSource.getUserProfile(currentUser.id);
+        if (ownProfile != null && ownProfile.pseudonym == pseudonym) {
+          // User is viewing their own profile, return full profile with userId
+          return ownProfile;
+        }
+      }
+      
+      // Either not authenticated or viewing someone else's profile
+      // Get user profile by pseudonym (public access)
       return await dataSource.getUserProfileByPseudonym(pseudonym);
     } catch (e) {
       throw Exception('Failed to load profile: $e');

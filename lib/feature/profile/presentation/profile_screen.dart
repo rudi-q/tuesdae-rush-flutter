@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tuesdae_rush/feature/profile/data/supabase_user_profile_datasource.dart';
 import 'package:tuesdae_rush/feature/profile/domain/entities/user_profile.dart';
 import 'package:tuesdae_rush/feature/profile/domain/repositories/user_profile_repository.dart';
@@ -18,6 +19,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isEditingPseudonym = false;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _pseudonymController = TextEditingController();
+  
+  /// Check if the current user is viewing their own profile
+  /// Returns true only if:
+  /// - User is authenticated (currentUser != null)
+  /// - Profile has a valid userId (not empty - indicates authentic user profile)
+  /// - Current user ID matches the profile's user ID
+  /// 
+  /// This prevents edit functionality from being shown when viewing profiles via shared links
+  bool get _isOwnProfile {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    return currentUser != null && 
+           currentProfile.userId.isNotEmpty && 
+           currentProfile.userId == currentUser.id;
+  }
 
   @override
   void initState() {
@@ -120,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (currentProfile.pseudonym != null)
             Column(
               children: [
-                if (isEditingPseudonym)
+                if (isEditingPseudonym && _isOwnProfile)
                   Row(
                     children: [
                       Text(
@@ -178,25 +193,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isEditingPseudonym = true;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFFFD700).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Icon(
-                            Icons.edit,
-                            size: 16,
-                            color: Color(0xFFFFD700),
+                      if (_isOwnProfile)
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isEditingPseudonym = true;
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: Color(0xFFFFD700),
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 SizedBox(height: 8),
@@ -204,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
           // Pseudonym save/cancel buttons
-          if (isEditingPseudonym)
+          if (isEditingPseudonym && _isOwnProfile)
             Padding(
               padding: EdgeInsets.only(top: 12),
               child: Row(
@@ -266,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
           // Editable display name section
-          if (isEditingName)
+          if (isEditingName && _isOwnProfile)
             Row(
               children: [
                 Expanded(
@@ -314,25 +330,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isEditingName = true;
-                    });
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFFFD700).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
+                if (_isOwnProfile)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isEditingName = true;
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(Icons.edit, size: 16, color: Color(0xFFFFD700)),
                     ),
-                    child: Icon(Icons.edit, size: 16, color: Color(0xFFFFD700)),
                   ),
-                ),
               ],
             ),
 
-          if (isEditingName)
+          if (isEditingName && _isOwnProfile)
             Padding(
               padding: EdgeInsets.only(top: 12),
               child: Row(
@@ -687,6 +704,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _savePseudonym() async {
+    // Security check: only allow authenticated users to edit their own profile
+    if (!_isOwnProfile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unauthorized: You can only edit your own profile'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final newPseudonym = _pseudonymController.text.trim();
 
     if (newPseudonym.isEmpty) {
@@ -762,6 +790,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveDisplayName() async {
+    // Security check: only allow authenticated users to edit their own profile
+    if (!_isOwnProfile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unauthorized: You can only edit your own profile'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final newName = _nameController.text.trim();
 
     if (newName.isEmpty) {
