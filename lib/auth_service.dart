@@ -5,9 +5,21 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  // Magic link authentication
-  Future<void> signInWithMagicLink(String email) async {
-    await Supabase.instance.client.auth.signInWithOtp(email: email);
+  // Send OTP to email
+  Future<void> sendOtp(String email) async {
+    await Supabase.instance.client.auth.signInWithOtp(
+      email: email,
+      shouldCreateUser: true,
+    );
+  }
+
+  // Verify OTP code
+  Future<void> verifyOtp(String email, String token) async {
+    await Supabase.instance.client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: OtpType.email,
+    );
   }
 
   // Check auth state

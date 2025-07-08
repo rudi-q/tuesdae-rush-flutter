@@ -777,6 +777,80 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                 ),
               ),
               SizedBox(height: 16),
+              // Sign In/Out button
+              GestureDetector(
+                onTap: () {
+                  if (AuthService().isAuthenticated) {
+                    _signOut();
+                  } else {
+                    _showSignInDialog();
+                  }
+                },
+                child: Container(
+                  width: 160,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AuthService().isAuthenticated ? Color(0xFFFF5722) : Color(0xFFFFD700),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.black, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        AuthService().isAuthenticated ? Icons.logout : Icons.login,
+                        color: AuthService().isAuthenticated ? Colors.white : Colors.black,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        AuthService().isAuthenticated ? 'Sign Out' : 'Sign In',
+                        style: TextStyle(
+                          color: AuthService().isAuthenticated ? Colors.white : Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 12),
+              // Auth status indicator
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AuthService().isAuthenticated 
+                    ? Color(0xFF4CAF50).withValues(alpha: 0.2)
+                    : Color(0xFFFFC107).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AuthService().isAuthenticated 
+                      ? Color(0xFF4CAF50)
+                      : Color(0xFFFFC107),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  AuthService().isAuthenticated 
+                    ? '✓ Scores being saved'
+                    : '⚠ Sign in to save scores',
+                  style: TextStyle(
+                    color: Colors.black.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
               Text(
                 'Press Space or ESC to resume',
                 style: TextStyle(
@@ -1120,12 +1194,12 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Sign In with Magic Link'),
+          title: Text('Sign In with Email'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Enter your email to receive a magic link:',
+                'Enter your email to receive a verification code:',
                 style: TextStyle(fontSize: 14),
               ),
               SizedBox(height: 16),
@@ -1140,7 +1214,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
               ),
               SizedBox(height: 8),
               Text(
-                'Check your email and click the link to sign in!',
+                'We\'ll send a 6-digit code to your email.',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
@@ -1155,32 +1229,159 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                 final email = emailController.text.trim();
                 if (email.isNotEmpty && email.contains('@')) {
                   try {
-                    await AuthService().signInWithMagicLink(email);
-                    Navigator.of(context).pop();
+                    await AuthService().sendOtp(email);
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                      _showOtpDialog(email);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to send code: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } else {
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Magic link sent to $email!'),
-                        backgroundColor: Colors.green,
+                        content: Text('Please enter a valid email'),
+                        backgroundColor: Colors.orange,
                       ),
                     );
-                  } catch (e) {
+                  }
+                }
+              },
+              child: Text('Send Code'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showOtpDialog(String email) {
+    final TextEditingController otpController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Don't allow dismissing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter Verification Code'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter the 6-digit code sent to:',
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 8),
+              Text(
+                email,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  letterSpacing: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Verification Code',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.security),
+                  counterText: '', // Hide character counter
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Check your email for the code',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Resend OTP
+                try {
+                  await AuthService().sendOtp(email);
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Failed to send magic link: $e'),
+                        content: Text('New code sent to $email'),
+                        backgroundColor: Colors.blue,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to resend code: $e'),
                         backgroundColor: Colors.red,
                       ),
                     );
                   }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Please enter a valid email'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
                 }
               },
-              child: Text('Send Magic Link'),
+              child: Text('Resend'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final otp = otpController.text.trim();
+                if (otp.length == 6) {
+                  try {
+                    await AuthService().verifyOtp(email, otp);
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                      setState(() {}); // Refresh UI
+                      
+                      // Sync local scores when user signs in
+                      await ScoreService().syncLocalScores();
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Successfully signed in!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Invalid code. Please try again.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please enter a 6-digit code'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text('Verify'),
             ),
           ],
         );
@@ -1191,20 +1392,24 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   void _signOut() async {
     try {
       await AuthService().signOut();
-      setState(() {}); // Refresh UI
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Signed out successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        setState(() {}); // Refresh UI
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Signed out successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to sign out: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to sign out: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
