@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'analytics_service.dart';
 import 'audio_manager.dart';
 import 'mobile_manager.dart';
+import 'score_service.dart';
 
 enum Direction { north, south, east, west }
 enum LightState { red, green }
@@ -566,6 +567,7 @@ class GameState {
       isGameOver = true;
       gameOverReason = 'Too many cars waiting! ($waitingCars cars)';
       _trackGameOverAnalytics('traffic_jam');
+      _saveGameScore();
       return;
     }
 
@@ -573,6 +575,7 @@ class GameState {
       isGameOver = true;
       gameOverReason = 'Poor performance! ($successRate% success, $totalCarsCrashed crashes)';
       _trackGameOverAnalytics('poor_performance');
+      _saveGameScore();
       return;
     }
   }
@@ -689,6 +692,21 @@ class GameState {
       totalCarsCrashed,
       getSuccessRate().toDouble(),
     );
+  }
+
+  // Save score to Supabase when game ends
+  void _saveGameScore() {
+    // Save asynchronously without blocking the UI
+    ScoreService().saveScore(
+      score: score,
+      difficulty: currentDifficulty.name,
+      carsPassed: totalCarsPassed,
+      successRate: getSuccessRate().toDouble(),
+      objectives: Map<String, dynamic>.from(objectives),
+    ).catchError((error) {
+      // Handle errors silently in background
+      print('Failed to save score: $error');
+    });
   }
 }
 

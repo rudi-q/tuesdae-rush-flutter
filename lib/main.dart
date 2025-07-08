@@ -6,14 +6,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'analytics_service.dart';
+import 'auth_service.dart';
 import 'audio_manager.dart';
 import 'firebase_options.dart';
 import 'game_painter.dart';
 import 'game_state.dart';
 import 'mobile_manager.dart';
 import 'responsive_layout.dart';
+import 'score_service.dart';
+import 'supabase_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +36,23 @@ void main() async {
       print('Continuing without Firebase for development');
     }
   }
+
+  // Initialize Supabase with proper error handling
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.supabaseUrl,
+      anonKey: SupabaseConfig.supabaseAnonKey,
+    );
+    if (kDebugMode) {
+      print('Supabase initialized successfully');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Supabase initialization failed: $e');
+      print('Continuing without Supabase for development');
+    }
+  }
+  
   runApp(TuesdaeRushApp());
 }
 
@@ -478,7 +499,102 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                 style: responsive.getTextStyle(context, 'title'),
                 textAlign: TextAlign.center,
               ),
+              SizedBox(height: 10),
+              
+              // Personal best display
+              FutureBuilder<int>(
+                future: ScoreService().getPersonalBest(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data! > 0) {
+                    final personalBest = snapshot.data!;
+                    final isNewRecord = gameState.score > personalBest;
+                    return Text(
+                      isNewRecord ? '🎉 NEW PERSONAL BEST! 🎉' : 'Personal Best: $personalBest',
+                      style: responsive.getTextStyle(
+                        context, 
+                        'body', 
+                        color: isNewRecord ? Color(0xFFFFD700) : Color(0xFFC8FFC8)
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  }
+                  return SizedBox.shrink();
+                },
+              ),
+              
+              // Auth status display
+              if (AuthService().isAuthenticated) 
+                Text(
+                  '✓ Score saved to leaderboard',
+                  style: responsive.getTextStyle(context, 'body', color: Color(0xFF4CAF50)),
+                )
+              else
+                Text(
+                  'Sign in to save your score!',
+                  style: responsive.getTextStyle(context, 'body', color: Color(0xFFFFC107)),
+                ),
+              
               SizedBox(height: responsive.getSpacing(context, type: 'large')),
+              
+              // Auth and Leaderboard buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Sign In/Out button
+                  GestureDetector(
+                    onTap: () {
+                      if (AuthService().isAuthenticated) {
+                        _signOut();
+                      } else {
+                        _showSignInDialog();
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AuthService().isAuthenticated ? Color(0xFFFF5722) : Color(0xFF2196F3),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Text(
+                        AuthService().isAuthenticated ? 'Sign Out' : 'Sign In',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  SizedBox(width: 12),
+                  
+                  // Leaderboard button (only if authenticated)
+                  if (AuthService().isAuthenticated)
+                    GestureDetector(
+                      onTap: _showLeaderboard,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFFFD700),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Text(
+                          'Leaderboard',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              
+              SizedBox(height: 16),
+              
               // Mobile-friendly restart button
               GestureDetector(
                 onTap: () {
@@ -996,6 +1112,206 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
     );
   }
 
+  // Authentication methods
+  void _showSignInDialog() {
+    final TextEditingController emailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sign In with Magic Link'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter your email to receive a magic link:',
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Check your email and click the link to sign in!',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
+                if (email.isNotEmpty && email.contains('@')) {
+                  try {
+                    await AuthService().signInWithMagicLink(email);
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Magic link sent to $email!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to send magic link: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter a valid email'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+              child: Text('Send Magic Link'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _signOut() async {
+    try {
+      await AuthService().signOut();
+      setState(() {}); // Refresh UI
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Signed out successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to sign out: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showLeaderboard() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.8,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Leaderboard',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFFFD700),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Expanded(
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: ScoreService().getLeaderboard(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Failed to load leaderboard',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        );
+                      }
+                      
+                      final scores = snapshot.data ?? [];
+                      if (scores.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'No scores yet!\nBe the first on the leaderboard!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        );
+                      }
+                      
+                      return ListView.builder(
+                        itemCount: scores.length,
+                        itemBuilder: (context, index) {
+                          final score = scores[index];
+                          final rank = index + 1;
+                          
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 4),
+                            child: ListTile(
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: rank == 1 ? Colors.yellow : rank == 2 ? Colors.grey[400] : rank == 3 ? Color(0xFFCD7F32) : Colors.blue,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    rank.toString(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                'Score: ${score['best_score']}',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                'Avg Success: ${(score['avg_success_rate'] ?? 0).toStringAsFixed(1)}% • ${score['games_played']} games',
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
 }
 
