@@ -80,9 +80,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildHeader(),
               SizedBox(height: 24),
               _buildStats(),
-              SizedBox(height: 24),
-              _buildRecentGames(),
-              SizedBox(height: 24),
+              if (_isOwnProfile) ...
+                [
+                  SizedBox(height: 24),
+                  _buildRecentGames(),
+                  SizedBox(height: 24),
+                ],
             ],
           ),
         ),
