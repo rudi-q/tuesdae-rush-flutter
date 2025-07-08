@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/services/analytics_service.dart';
@@ -738,6 +739,48 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                 ),
               ),
               SizedBox(height: 16),
+              // Profile button (only if authenticated)
+              if (AuthService().isAuthenticated)
+                GestureDetector(
+                  onTap: () => _openProfileInNewWindow(),
+                  child: Container(
+                    width: 160,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF673AB7), // Deep purple color
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'My Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              SizedBox(height: 16),
               // Leaderboard button (only if authenticated)
               if (AuthService().isAuthenticated)
                 GestureDetector(
@@ -1439,6 +1482,40 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
         );
       },
     );
+  }
+
+  void _openProfileInNewWindow() async {
+    try {
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser != null && currentUser.email != null) {
+        // Get current base URL
+        final String baseUrl = Uri.base.toString();
+        final String profileUrl = '$baseUrl#/player/${currentUser.email}';
+        
+        final Uri url = Uri.parse(profileUrl);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not open profile'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open profile: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _signOut() async {
