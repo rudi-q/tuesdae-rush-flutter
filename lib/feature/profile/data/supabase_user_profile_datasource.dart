@@ -1,8 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/util/helper.dart';
-import '../../../profile/domain/entities/user_profile.dart';
-import '../../../profile/domain/repositories/user_profile_repository.dart';
+import '../../../core/util/helper.dart';
+import '../domain/entities/user_profile.dart';
+import '../domain/repositories/user_profile_repository.dart';
 
 class SupabaseUserProfileDataSource implements UserProfileRepository {
   final SupabaseClient client;

@@ -7,8 +7,8 @@ import '../../core/services/analytics_service.dart';
 import '../../feature/auth/auth_service.dart';
 import '../../feature/gameplay/presentation/game.dart';
 import '../../feature/profile/domain/entities/user_profile.dart';
-import '../../feature/profile/infrastructure/datasources/supabase_user_profile_datasource.dart';
-import '../../feature/profile/presentation/pages/profile_screen.dart';
+import '../../feature/profile/data/supabase_user_profile_datasource.dart';
+import '../../feature/profile/presentation/profile_screen.dart';
 
 class AppRouter {
   static GoRouter get router {

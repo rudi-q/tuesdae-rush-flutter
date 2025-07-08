@@ -1265,15 +1265,17 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       onPressed: () async {
                         final email = emailController.text.trim();
                         if (email.isNotEmpty && email.contains('@')) {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             await AuthService().sendOtp(email);
                             if (mounted) {
-                              Navigator.of(context).pop();
+                              navigator.pop();
                               _showOtpDialog(email);
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Failed to send code: $e'),
                                   backgroundColor: Colors.red,
@@ -1405,10 +1407,11 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                     TextButton(
                       onPressed: () async {
                         // Resend OTP
+                        final messenger = ScaffoldMessenger.of(context);
                         try {
                           await AuthService().sendOtp(email);
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                 content: Text('New code sent to $email'),
                                 backgroundColor: Colors.blue,
@@ -1417,7 +1420,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                           }
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                 content: Text('Failed to resend code: $e'),
                                 backgroundColor: Colors.red,
@@ -1432,16 +1435,18 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       onPressed: () async {
                         final otp = otpController.text.trim();
                         if (otp.length == 6) {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             await AuthService().verifyOtp(email, otp);
                             if (mounted) {
-                              Navigator.of(context).pop();
+                              navigator.pop();
                               setState(() {}); // Refresh UI
 
                               // Sync local scores when user signs in
                               await ScoreService().syncLocalScores();
 
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Successfully signed in!'),
                                   backgroundColor: Colors.green,
@@ -1450,7 +1455,7 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Invalid code. Please try again.'),
                                   backgroundColor: Colors.red,

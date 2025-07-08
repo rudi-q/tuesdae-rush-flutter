@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tuesdae_rush/feature/profile/domain/entities/user_profile.dart';
 import 'package:tuesdae_rush/feature/profile/domain/repositories/user_profile_repository.dart';
-import 'package:tuesdae_rush/feature/profile/infrastructure/datasources/supabase_user_profile_datasource.dart';
+import 'package:tuesdae_rush/feature/profile/data/supabase_user_profile_datasource.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -597,24 +597,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final dataSource = SupabaseUserProfileDataSource();
       await dataSource.saveDisplayName(currentProfile.userId, newName);
       
-      setState(() {
-        currentProfile = currentProfile.copyWith(displayName: newName);
-        isEditingName = false;
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✓ Display name updated successfully!'),
-          backgroundColor: Color(0xFF4CAF50),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          currentProfile = currentProfile.copyWith(displayName: newName);
+          isEditingName = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✓ Display name updated successfully!'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update display name: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update display name: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
   
