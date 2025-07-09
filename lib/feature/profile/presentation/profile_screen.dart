@@ -19,19 +19,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isEditingPseudonym = false;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _pseudonymController = TextEditingController();
-  
+
   /// Check if the current user is viewing their own profile
   /// Returns true only if:
   /// - User is authenticated (currentUser != null)
   /// - Profile has a valid userId (not empty - indicates authentic user profile)
   /// - Current user ID matches the profile's user ID
-  /// 
+  ///
   /// This prevents edit functionality from being shown when viewing profiles via shared links
   bool get _isOwnProfile {
     final currentUser = Supabase.instance.client.auth.currentUser;
-    return currentUser != null && 
-           currentProfile.userId.isNotEmpty && 
-           currentProfile.userId == currentUser.id;
+    return currentUser != null &&
+        currentProfile.userId.isNotEmpty &&
+        currentProfile.userId == currentUser.id;
   }
 
   @override
@@ -80,12 +80,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildHeader(),
               SizedBox(height: 24),
               _buildStats(),
-              if (_isOwnProfile) ...
-                [
-                  SizedBox(height: 24),
-                  _buildRecentGames(),
-                  SizedBox(height: 24),
-                ],
+              if (_isOwnProfile) ...[
+                SizedBox(height: 24),
+                _buildRecentGames(),
+                SizedBox(height: 24),
+              ],
             ],
           ),
         ),
@@ -346,7 +345,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: Color(0xFFFFD700).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Icon(Icons.edit, size: 16, color: Color(0xFFFFD700)),
+                      child: Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: Color(0xFFFFD700),
+                      ),
                     ),
                   ),
               ],

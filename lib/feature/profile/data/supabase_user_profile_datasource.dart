@@ -60,11 +60,12 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
   Future<UserProfile?> getUserProfileByPseudonym(String pseudonym) async {
     try {
       // Get user id using the pseudonym
-      final pseudonymResult = await client
-          .from('user_pseudonyms')
-          .select('user_id')
-          .eq('username', pseudonym)
-          .maybeSingle();
+      final pseudonymResult =
+          await client
+              .from('user_pseudonyms')
+              .select('user_id')
+              .eq('username', pseudonym)
+              .maybeSingle();
 
       if (pseudonymResult == null) {
         return null; // Pseudonym not found
@@ -274,29 +275,34 @@ class SupabaseUserProfileDataSource implements UserProfileRepository {
     try {
       await client
           .from('user_pseudonyms')
-          .update({'username': newPseudonym, 'updated_at': DateTime.now().toIso8601String()})
+          .update({
+            'username': newPseudonym,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
           .eq('user_id', userId);
-      
+
       // Check if the update was successful
       // If no rows were affected, the user might not have a pseudonym record yet
       // In that case, create one
-      final existingRecord = await client
-          .from('user_pseudonyms')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
-      
+      final existingRecord =
+          await client
+              .from('user_pseudonyms')
+              .select('id')
+              .eq('user_id', userId)
+              .maybeSingle();
+
       if (existingRecord == null) {
-        await client
-            .from('user_pseudonyms')
-            .insert({
-              'user_id': userId,
-              'username': newPseudonym,
-            });
+        await client.from('user_pseudonyms').insert({
+          'user_id': userId,
+          'username': newPseudonym,
+        });
       }
     } catch (e) {
-      if (e.toString().contains('unique constraint') || e.toString().contains('duplicate')) {
-        throw Exception('Username already taken. Please choose a different one.');
+      if (e.toString().contains('unique constraint') ||
+          e.toString().contains('duplicate')) {
+        throw Exception(
+          'Username already taken. Please choose a different one.',
+        );
       }
       throw Exception('Failed to update username: $e');
     }

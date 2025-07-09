@@ -151,7 +151,7 @@ class ProfileScreenWrapper extends StatelessWidget {
           return ownProfile;
         }
       }
-      
+
       // Either not authenticated or viewing someone else's profile
       // Get user profile by pseudonym (public access)
       return await dataSource.getUserProfileByPseudonym(pseudonym);
