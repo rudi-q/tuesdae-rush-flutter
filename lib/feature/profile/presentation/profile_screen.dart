@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tuesdae_rush/feature/profile/data/supabase_user_profile_datasource.dart';
 import 'package:tuesdae_rush/feature/profile/domain/entities/user_profile.dart';
 import 'package:tuesdae_rush/feature/profile/domain/repositories/user_profile_repository.dart';
@@ -15,18 +16,36 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late UserProfile currentProfile;
   bool isEditingName = false;
+  bool isEditingPseudonym = false;
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _pseudonymController = TextEditingController();
+
+  /// Check if the current user is viewing their own profile
+  /// Returns true only if:
+  /// - User is authenticated (currentUser != null)
+  /// - Profile has a valid userId (not empty - indicates authentic user profile)
+  /// - Current user ID matches the profile's user ID
+  ///
+  /// This prevents edit functionality from being shown when viewing profiles via shared links
+  bool get _isOwnProfile {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    return currentUser != null &&
+        currentProfile.userId.isNotEmpty &&
+        currentProfile.userId == currentUser.id;
+  }
 
   @override
   void initState() {
     super.initState();
     currentProfile = widget.userProfile;
     _nameController.text = currentProfile.displayName ?? '';
+    _pseudonymController.text = currentProfile.pseudonym ?? '';
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _pseudonymController.dispose();
     super.dispose();
   }
 
@@ -38,7 +57,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Color(0xFF2A4A73),
         elevation: 0,
         title: Text(
-          currentProfile.displayName ?? 'Anonymous Player',
+          currentProfile.pseudonym != null
+              ? '@${currentProfile.pseudonym}'
+              : (currentProfile.displayName ?? 'Anonymous Player'),
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: IconThemeData(color: Colors.white),
@@ -59,9 +80,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildHeader(),
               SizedBox(height: 24),
               _buildStats(),
-              SizedBox(height: 24),
-              _buildRecentGames(),
-              SizedBox(height: 24),
+              if (_isOwnProfile) ...[
+                SizedBox(height: 24),
+                _buildRecentGames(),
+                SizedBox(height: 24),
+              ],
             ],
           ),
         ),
@@ -110,15 +133,165 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SizedBox(height: 16),
+          // Show pseudonym prominently - editable
+          if (currentProfile.pseudonym != null)
+            Column(
+              children: [
+                if (isEditingPseudonym && _isOwnProfile)
+                  Row(
+                    children: [
+                      Text(
+                        '@',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFFD700),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _pseudonymController,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFFD700),
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Enter username',
+                            hintStyle: TextStyle(
+                              color: Color(0xFFFFD700).withValues(alpha: 0.6),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Color(0xFFFFD700)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: Color(0xFFFFD700).withValues(alpha: 0.6),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Color(0xFFFFD700)),
+                            ),
+                          ),
+                          maxLength: 30,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '@${currentProfile.pseudonym}',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFFD700),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      if (_isOwnProfile)
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isEditingPseudonym = true;
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: Color(0xFFFFD700),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                SizedBox(height: 8),
+              ],
+            ),
+
+          // Pseudonym save/cancel buttons
+          if (isEditingPseudonym && _isOwnProfile)
+            Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Cancel button
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isEditingPseudonym = false;
+                        _pseudonymController.text =
+                            currentProfile.pseudonym ?? '';
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade600,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Save button
+                  GestureDetector(
+                    onTap: _savePseudonym,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF4CAF50),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Editable display name section
-          if (isEditingName)
+          if (isEditingName && _isOwnProfile)
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _nameController,
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -153,31 +326,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ? currentProfile.displayName!
                       : 'Anonymous Player',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isEditingName = true;
-                    });
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFFFD700).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
+                if (_isOwnProfile)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isEditingName = true;
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFFD700).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: Color(0xFFFFD700),
+                      ),
                     ),
-                    child: Icon(Icons.edit, size: 16, color: Color(0xFFFFD700)),
                   ),
-                ),
               ],
             ),
 
-          if (isEditingName)
+          if (isEditingName && _isOwnProfile)
             Padding(
               padding: EdgeInsets.only(top: 12),
               child: Row(
@@ -531,7 +709,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _savePseudonym() async {
+    // Security check: only allow authenticated users to edit their own profile
+    if (!_isOwnProfile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unauthorized: You can only edit your own profile'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final newPseudonym = _pseudonymController.text.trim();
+
+    if (newPseudonym.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Username cannot be empty'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (newPseudonym.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Username must be at least 3 characters'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (newPseudonym.length > 30) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Username must be 30 characters or less'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Check for valid characters (alphanumeric and underscore)
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(newPseudonym)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Username can only contain letters, numbers, and underscores',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final dataSource = SupabaseUserProfileDataSource();
+      await dataSource.updatePseudonym(currentProfile.userId, newPseudonym);
+
+      if (mounted) {
+        setState(() {
+          currentProfile = currentProfile.copyWith(pseudonym: newPseudonym);
+          isEditingPseudonym = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✓ Username updated successfully!'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update username: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _saveDisplayName() async {
+    // Security check: only allow authenticated users to edit their own profile
+    if (!_isOwnProfile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unauthorized: You can only edit your own profile'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final newName = _nameController.text.trim();
 
     if (newName.isEmpty) {

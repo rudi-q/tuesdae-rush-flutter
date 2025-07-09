@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/services/analytics_service.dart';
-import '../../feature/auth/auth_service.dart';
 import '../../feature/gameplay/presentation/game.dart';
 import '../../feature/profile/data/supabase_user_profile_datasource.dart';
 import '../../feature/profile/domain/entities/user_profile.dart';
@@ -30,11 +29,11 @@ class AppRouter {
 
         // Profile route
         GoRoute(
-          path: '/player/:username',
+          path: '/player/:pseudonym',
           name: 'profile',
           builder: (context, state) {
-            final username = state.pathParameters['username']!;
-            return ProfileScreenWrapper(username: username);
+            final pseudonym = state.pathParameters['pseudonym']!;
+            return ProfileScreenWrapper(pseudonym: pseudonym);
           },
         ),
       ],
@@ -64,9 +63,9 @@ class AppRouter {
 
 /// Wrapper widget that handles loading profile data
 class ProfileScreenWrapper extends StatelessWidget {
-  final String username;
+  final String pseudonym;
 
-  const ProfileScreenWrapper({super.key, required this.username});
+  const ProfileScreenWrapper({super.key, required this.pseudonym});
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +81,7 @@ class ProfileScreenWrapper extends StatelessWidget {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Loading $username\'s profile...'),
+                  Text('Loading @$pseudonym\'s profile...'),
                 ],
               ),
             ),
@@ -121,7 +120,7 @@ class ProfileScreenWrapper extends StatelessWidget {
                 children: [
                   Icon(Icons.person_off, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text('User "$username" not found'),
+                  Text('User "@$pseudonym" not found'),
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => context.go('/'),
@@ -139,23 +138,23 @@ class ProfileScreenWrapper extends StatelessWidget {
   }
 
   Future<UserProfile?> _loadUserProfile() async {
-    // Check if user is authenticated
-    if (!AuthService().isAuthenticated) {
-      throw Exception('You must be signed in to view profiles');
-    }
-
     final dataSource = SupabaseUserProfileDataSource();
 
-    // Try to get by email first (since we might not have a username field)
-    // This is a simplified approach - you might want to enhance this based on your needs
     try {
+      // Check if current user is authenticated and if this pseudonym belongs to them
       final currentUser = Supabase.instance.client.auth.currentUser;
-      if (currentUser != null && currentUser.email == username) {
-        return await dataSource.getUserProfile(currentUser.id);
+      if (currentUser != null) {
+        // First try to get the user's own profile to check if this pseudonym matches
+        final ownProfile = await dataSource.getUserProfile(currentUser.id);
+        if (ownProfile != null && ownProfile.pseudonym == pseudonym) {
+          // User is viewing their own profile, return full profile with userId
+          return ownProfile;
+        }
       }
 
-      // If username doesn't match current user's email, try searching by email
-      return await dataSource.getUserProfileByEmail(username);
+      // Either not authenticated or viewing someone else's profile
+      // Get user profile by pseudonym (public access)
+      return await dataSource.getUserProfileByPseudonym(pseudonym);
     } catch (e) {
       throw Exception('Failed to load profile: $e');
     }

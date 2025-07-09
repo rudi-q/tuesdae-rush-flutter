@@ -939,12 +939,15 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
                       children: [
                         Icon(Icons.emoji_events, color: Colors.white, size: 18),
                         SizedBox(width: 6),
-                        Text(
-                          'Leaderboard',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            'Leaderboard',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -1678,20 +1681,41 @@ class TuesdaeRushGameState extends State<TuesdaeRushGame>
   void _openProfileInNewWindow() async {
     try {
       final currentUser = Supabase.instance.client.auth.currentUser;
-      if (currentUser != null && currentUser.email != null) {
-        // Get current base URL
-        final String baseUrl = Uri.base.toString();
-        final String profileUrl = '$baseUrl#/player/${currentUser.email}';
+      if (currentUser != null) {
+        // Get user's pseudonym from database
+        final pseudonymResult =
+            await Supabase.instance.client
+                .from('user_pseudonyms')
+                .select('username')
+                .eq('user_id', currentUser.id)
+                .maybeSingle();
 
-        final Uri url = Uri.parse(profileUrl);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
+        if (pseudonymResult != null) {
+          final pseudonym = pseudonymResult['username'] as String;
+
+          // Get current base URL
+          final String baseUrl = Uri.base.toString();
+          final String profileUrl = '$baseUrl#/player/$pseudonym';
+
+          final Uri url = Uri.parse(profileUrl);
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Could not open profile'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Could not open profile'),
-                backgroundColor: Colors.red,
+                content: Text('Profile not found. Please try again.'),
+                backgroundColor: Colors.orange,
               ),
             );
           }
