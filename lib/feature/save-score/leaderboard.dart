@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'score_service.dart' show ScoreService;
 
-showLeaderboard(BuildContext context) {
+void showLeaderboard(BuildContext context) {
   showDialog(
     context: context,
     barrierColor: Color(0xFF1E3264).withValues(alpha: 0.8),

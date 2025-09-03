@@ -20,7 +20,7 @@ extension StringExtensions on String {
   }
 }
 
-void devPrint(var message) {
+void devPrint(dynamic message) {
   if (kDebugMode) {
     print(message);
   }
