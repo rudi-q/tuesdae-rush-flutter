@@ -7,6 +7,7 @@ import '../../../core/util/helper.dart';
 import '../../audio/audio_manager.dart';
 import '../../responsiveness/mobile_manager.dart';
 import '../../save-score/score_service.dart';
+import '../config/data_class_config.dart';
 import '../config/game_config.dart';
 
 // GameTimer class to replace expensive DateTime.now() calls
