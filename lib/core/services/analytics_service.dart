@@ -2,29 +2,29 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-/// Firebase Analytics service with debug mode handling
+/// Firebase Analytics service with release-only tracking
 /// 
-/// In DEBUG mode: Events are only logged to console, nothing sent to Firebase
-/// In RELEASE mode: Events are sent to Firebase Analytics for production tracking
+/// Only RELEASE builds send events to Firebase Analytics.
+/// DEBUG and PROFILE builds only log to console to prevent test data pollution.
 /// 
-/// This prevents development/testing data from polluting production analytics.
+/// This ensures clean production analytics data.
 class AnalyticsService {
   static FirebaseAnalytics? _analytics;
   
-  /// Whether analytics collection is enabled (disabled in debug mode)
-  static bool get isAnalyticsEnabled => !kDebugMode;
+  /// Whether analytics collection is enabled (only in release mode)
+  static bool get isAnalyticsEnabled => kReleaseMode;
   
   /// Get current analytics status for debugging
   static String get analyticsStatus {
-    if (kDebugMode) {
-      return 'Debug Mode: Analytics disabled (events logged to console only)';
+    if (kReleaseMode) {
+      return analytics != null ? 'Release Mode: Analytics enabled and active' : 'Release Mode: Analytics unavailable';
     }
-    return analytics != null ? 'Release Mode: Analytics enabled and active' : 'Release Mode: Analytics unavailable';
+    return 'Debug/Profile Mode: Analytics disabled (events logged to console only)';
   }
 
   static FirebaseAnalytics? get analytics {
-    // Disable analytics in debug mode to avoid polluting production data
-    if (kDebugMode) {
+    // Only enable analytics in release mode to avoid polluting production data
+    if (!kReleaseMode) {
       return null;
     }
     
@@ -48,9 +48,9 @@ class AnalyticsService {
     String name, [
     Map<String, Object>? parameters,
   ]) async {
-    // In debug mode, only log to console without sending to Firebase
-    if (kDebugMode) {
-      print('🔍 [DEBUG] Analytics Event: $name ${parameters != null ? 'with params: $parameters' : '(no params)'}');
+    // Only send to Firebase in release mode - debug/profile log to console
+    if (!kReleaseMode) {
+      print('🔍 [${kDebugMode ? 'DEBUG' : 'PROFILE'}] Analytics Event: $name ${parameters != null ? 'with params: $parameters' : '(no params)'}');
       return;
     }
     

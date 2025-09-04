@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../domain/game_state.dart';
+import '../domain/types.dart';
 import 'data_class_config.dart';
 
 /// 🎮 **TUESDAE RUSH GAME CONFIGURATION**

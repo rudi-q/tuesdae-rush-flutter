@@ -9,6 +9,7 @@ import '../../responsiveness/mobile_manager.dart';
 import '../../save-score/score_service.dart';
 import '../config/data_class_config.dart';
 import '../config/game_config.dart';
+import 'types.dart';
 
 // GameTimer class to replace expensive DateTime.now() calls
 class GameTimer {
@@ -17,15 +18,6 @@ class GameTimer {
   static void update() => _frameCount++;
   static void reset() => _frameCount = 0;
 }
-
-
-enum Direction { north, south, east, west }
-
-enum LightState { red, green }
-
-enum CarType { regular, ambulance, police, tractor, schoolBus, impatient }
-
-enum Difficulty { easy, medium, hard, extreme, insane }
 
 class GameState {
   // Game dimensions (using GameConfig defaults)

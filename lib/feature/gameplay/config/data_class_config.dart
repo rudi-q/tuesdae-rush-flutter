@@ -5,7 +5,7 @@
 
 import 'dart:ui';
 
-import '../domain/game_state.dart';
+import '../domain/types.dart';
 
 class DifficultyConfig {
   final int carSpawnIntervalFrames;
@@ -59,15 +59,6 @@ class CarConfig {
     required this.ignoresTrafficLights,
     required this.specialBehavior,
   });
-}
-
-enum CarBehavior {
-  normal,
-  emergency,
-  aggressive,
-  slow,
-  flashingLights,
-  impatient,
 }
 
 class ColorPalettes {
@@ -170,13 +161,6 @@ class ObjectiveDefinition {
     required this.type,
     this.secondaryRequirement,
   });
-}
-
-enum ObjectiveType {
-  carsPassed,
-  perfectSafety,
-  efficiency,
-  trafficManagement,
 }
 
 class GameOverConfig {

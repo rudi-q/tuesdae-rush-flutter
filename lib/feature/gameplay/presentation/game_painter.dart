@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../config/game_config.dart';
 import '../domain/game_state.dart';
+import '../domain/types.dart';
 
 class GamePainter extends CustomPainter {
   final GameState gameState;

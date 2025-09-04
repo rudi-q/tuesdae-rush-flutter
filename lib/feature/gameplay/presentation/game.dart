@@ -12,6 +12,7 @@ import '../../responsiveness/responsive_layout.dart';
 import '../../save-score/leaderboard.dart' show showLeaderboard;
 import '../../save-score/score_service.dart';
 import '../domain/game_state.dart';
+import '../domain/types.dart';
 import 'game_canvas.dart' show GameCanvas;
 import 'game_components.dart' show buildInstructions;
 
