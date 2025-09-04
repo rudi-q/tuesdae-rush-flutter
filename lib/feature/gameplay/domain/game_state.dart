@@ -7,11 +7,12 @@ import '../../../core/util/helper.dart';
 import '../../audio/audio_manager.dart';
 import '../../responsiveness/mobile_manager.dart';
 import '../../save-score/score_service.dart';
+import '../config/game_config.dart';
 
 // GameTimer class to replace expensive DateTime.now() calls
 class GameTimer {
   static int _frameCount = 0;
-  static double get time => _frameCount * 0.016667; // 60 FPS (1/60 seconds per frame)
+  static double get time => _frameCount * GameConfig.timing.frameTimeSeconds;
   static void update() => _frameCount++;
   static void reset() => _frameCount = 0;
 }
@@ -26,11 +27,11 @@ enum CarType { regular, ambulance, police, tractor, schoolBus, impatient }
 enum Difficulty { easy, medium, hard, extreme, insane }
 
 class GameState {
-  // Game dimensions
-  double gameWidth = 800;
-  double gameHeight = 600;
-  double intersectionSize = 200;
-  double roadWidth = 80;
+  // Game dimensions (using GameConfig defaults)
+  double gameWidth = GameConfig.physics.defaultGameWidth;
+  double gameHeight = GameConfig.physics.defaultGameHeight;
+  double intersectionSize = GameConfig.physics.defaultIntersectionSize;
+  double roadWidth = GameConfig.physics.defaultRoadWidth;
 
   // Game objects
   List<Car> cars = [];
@@ -57,15 +58,8 @@ class GameState {
   int carSpawnTimer = 0;
   int nextSpawnTime = 0;
 
-  // Difficulty system
+  // Difficulty system (now uses GameConfig)
   Difficulty currentDifficulty = Difficulty.medium;
-  Map<Difficulty, DifficultySettings> difficultySettings = {
-    Difficulty.easy: DifficultySettings(90, 1.5, 1.0, Color(0xFF2ECC71)),
-    Difficulty.medium: DifficultySettings(60, 2.0, 1.5, Color(0xFFF39C12)),
-    Difficulty.hard: DifficultySettings(45, 2.5, 2.0, Color(0xFFE74C3C)),
-    Difficulty.extreme: DifficultySettings(35, 3.0, 2.5, Color(0xFF8E44AD)),
-    Difficulty.insane: DifficultySettings(25, 3.5, 3.0, Color(0xFF2C3E50)),
-  };
 
   // Objectives
   Map<String, bool> objectives = {
@@ -109,14 +103,14 @@ class GameState {
 
     // Recalculate intersection size and road width based on new canvas dimensions
     double minDimension = math.min(gameWidth, gameHeight);
-    intersectionSize = math.max(minDimension * 0.25, 150);
-    roadWidth = math.max(minDimension * 0.1, 60);
+    intersectionSize = math.max(minDimension * GameConfig.physics.intersectionSizeMultiplier, GameConfig.physics.minimumIntersectionSize);
+    roadWidth = math.max(minDimension * GameConfig.physics.roadWidthMultiplier, GameConfig.physics.minimumRoadWidth);
 
     _updateTrafficLightTouchAreas();
   }
 
   void _updateTrafficLightTouchAreas() {
-    double lightDistance = 120;
+    double lightDistance = GameConfig.physics.trafficLightDistance;
     double centerX = gameWidth / 2;
     double centerY = gameHeight / 2;
     // Dynamic touch areas based on device type and screen size
@@ -196,7 +190,7 @@ class GameState {
           _checkScoreMilestones(oldScore, score);
 
           // Track cars passed milestones
-          if (totalCarsPassed % 25 == 0) {
+          if (totalCarsPassed % GameConfig.gameOver.analyticsCarsMilestone == 0) {
             AnalyticsService.logCarsPassed(totalCarsPassed);
           }
 
@@ -210,7 +204,7 @@ class GameState {
               x: cars[i].x,
               y: cars[i].y,
               text: '+$points',
-              timer: 90,
+              timer: GameConfig.effects.scorePopupDurationFrames,
               color: Color(0xFF00FF00),
             ),
           );
@@ -225,8 +219,7 @@ class GameState {
     // Spawn cars
     carSpawnTimer++;
     if (nextSpawnTime == 0) {
-      int baseInterval =
-          difficultySettings[currentDifficulty]!.carSpawnInterval;
+      int baseInterval = GameConfig.getDifficulty(currentDifficulty).carSpawnIntervalFrames;
       double randomVariation = baseInterval * 0.5;
       nextSpawnTime =
           (baseInterval + (math.Random().nextDouble() - 0.5) * randomVariation)
@@ -258,27 +251,8 @@ class GameState {
   }
 
   void _spawnCar() {
-    List<Direction> spawnPattern = [
-      Direction.north,
-      Direction.east,
-      Direction.south,
-      Direction.west,
-      Direction.north,
-      Direction.west,
-      Direction.east,
-      Direction.south,
-      Direction.west,
-      Direction.north,
-      Direction.east,
-      Direction.north,
-      Direction.south,
-      Direction.east,
-      Direction.west,
-      Direction.south,
-    ];
-
-    Direction fromDirection =
-        spawnPattern[totalCarsSpawned % spawnPattern.length];
+    Direction fromDirection = GameConfig.carSpawning.directionPattern[
+        totalCarsSpawned % GameConfig.carSpawning.directionPattern.length];
     Direction toDirection = _getOppositeDirection(fromDirection);
 
     Car? car = _createCar(fromDirection, toDirection);
@@ -304,13 +278,15 @@ class GameState {
   Car? _createCar(Direction from, Direction to) {
     CarType carType = _determineCarType();
 
-    double speedRandomFactor = 0.8 + math.Random().nextDouble() * 0.4;
-    double carSpeed =
-        difficultySettings[currentDifficulty]!.carSpeed * speedRandomFactor;
-
-    if (carType == CarType.tractor) {
-      carSpeed *= 0.3; // Super slow
-    }
+    // Apply speed variation and car-specific multipliers
+    double speedRange = GameConfig.carSpawning.speedVariation.maxFactor - 
+                       GameConfig.carSpawning.speedVariation.minFactor;
+    double speedRandomFactor = GameConfig.carSpawning.speedVariation.minFactor + 
+                              math.Random().nextDouble() * speedRange;
+    double carSpeed = GameConfig.getDifficulty(currentDifficulty).carSpeed * speedRandomFactor;
+    
+    // Apply car-specific speed multiplier
+    carSpeed *= GameConfig.getCarConfig(carType).speedMultiplier;
 
     Car car = Car(
       from: from,
@@ -328,70 +304,54 @@ class GameState {
 
   CarType _determineCarType() {
     double random = math.Random().nextDouble();
-
-    if (random < 0.15) return CarType.ambulance;
-    if (random < 0.225) return CarType.police;
-    if (random < 0.375) return CarType.impatient;
-    if (random < 0.45) return CarType.tractor;
-    if (random < 0.65) return CarType.schoolBus;
+    double cumulative = 0.0;
+    
+    for (final entry in GameConfig.carSpawning.typeDistribution.entries) {
+      cumulative += entry.value;
+      if (random < cumulative) {
+        return entry.key;
+      }
+    }
+    
+    // Fallback to regular (should never reach here if distribution sums to 1.0)
     return CarType.regular;
   }
 
   Color _getCarColor(CarType carType, int carIndex) {
-    List<Color> carColors = [
-      Color(0xFF1ABC9C),
-      Color(0xFF2ECC71),
-      Color(0xFF3498DB),
-      Color(0xFF9B59B6),
-      Color(0xFF34495E),
-      Color(0xFFF1C40F),
-      Color(0xFFE67E22),
-      Color(0xFFE74C3C),
-      Color(0xFFECF0F1),
-      Color(0xFF95A5A6),
-      Color(0xFFD35400),
-      Color(0xFFC0392B),
-    ];
-
+    final carConfig = GameConfig.getCarConfig(carType);
+    
+    // If the car has a specific color, use it
+    if (carConfig.color != null) {
+      return carConfig.color!;
+    }
+    
+    // Otherwise, use the appropriate color palette
     switch (carType) {
-      case CarType.ambulance:
-        return Colors.white;
-      case CarType.police:
-        return Color(0xFF00008B);
-      case CarType.tractor:
-        return Color(0xFF228B22);
-      case CarType.schoolBus:
-        return Color(0xFFFFFF00);
       case CarType.impatient:
-        List<Color> impatientColors = [
-          Color(0xFFE74C3C),
-          Color(0xFFD35400),
-          Color(0xFF2C3E50),
-          Color(0xFF8E44AD),
-        ];
-        return impatientColors[carIndex % impatientColors.length];
+        return GameConfig.colors.impatientCars[carIndex % GameConfig.colors.impatientCars.length];
       default:
-        return carColors[carIndex % carColors.length];
+        return GameConfig.colors.regularCars[carIndex % GameConfig.colors.regularCars.length];
     }
   }
 
   void _setCarStartingPosition(Car car) {
+    double laneOffset = roadWidth * GameConfig.physics.laneOffset;
     switch (car.from) {
       case Direction.north:
-        car.x = gameWidth / 2 - roadWidth / 4;
+        car.x = gameWidth / 2 - laneOffset;
         car.y = -car.getSize();
         break;
       case Direction.south:
-        car.x = gameWidth / 2 + roadWidth / 4;
+        car.x = gameWidth / 2 + laneOffset;
         car.y = gameHeight + car.getSize();
         break;
       case Direction.east:
         car.x = gameWidth + car.getSize();
-        car.y = gameHeight / 2 - roadWidth / 4;
+        car.y = gameHeight / 2 - laneOffset;
         break;
       case Direction.west:
         car.x = -car.getSize();
-        car.y = gameHeight / 2 + roadWidth / 4;
+        car.y = gameHeight / 2 + laneOffset;
         break;
     }
   }
@@ -457,16 +417,16 @@ class GameState {
     car2.stopped = true;
     car1.speed = 0;
     car2.speed = 0;
-    car1.removalTimer = 300;
-    car2.removalTimer = 300;
+    car1.removalTimer = GameConfig.effects.crashRemovalTimerFrames;
+    car2.removalTimer = GameConfig.effects.crashRemovalTimerFrames;
 
     totalCarsCrashed += 2;
 
     double crashX = (car1.x + car2.x) / 2;
     double crashY = (car1.y + car2.y) / 2;
 
-    crashEffects.add(CrashEffect(x: crashX, y: crashY, timer: 60));
-    score = math.max(0, score - 5);
+    crashEffects.add(CrashEffect(x: crashX, y: crashY, timer: GameConfig.effects.crashEffectDurationFrames));
+    score = math.max(0, score - GameConfig.effects.crashScorePenalty);
 
     // Play crash sound and haptic
     AudioManager().playCrash();
@@ -476,8 +436,8 @@ class GameState {
       ScorePopup(
         x: crashX,
         y: crashY,
-        text: '-5',
-        timer: 90,
+        text: '-${GameConfig.effects.crashScorePenalty}',
+        timer: GameConfig.effects.scorePopupDurationFrames,
         color: Color(0xFFFF6464),
       ),
     );
@@ -486,7 +446,7 @@ class GameState {
   void _updateScorePopups() {
     for (int i = scorePopups.length - 1; i >= 0; i--) {
       scorePopups[i].timer--;
-      scorePopups[i].y -= 1;
+      scorePopups[i].y -= GameConfig.effects.popupFloatSpeed;
 
       if (scorePopups[i].timer <= 0) {
         scorePopups.removeAt(i);
@@ -515,16 +475,16 @@ class GameState {
   }
 
   void _createSuccessParticles(double x, double y) {
-    for (int i = 0; i < 8; i++) {
-      double angle = (i / 8) * 2 * math.pi;
-      double speed = 1 + math.Random().nextDouble() * 1.5;
+    for (int i = 0; i < GameConfig.effects.particlesPerSuccess; i++) {
+      double angle = (i / GameConfig.effects.particlesPerSuccess) * 2 * math.pi;
+      double speed = GameConfig.effects.particleSpeedMin + math.Random().nextDouble() * GameConfig.effects.particleSpeedMax;
       particles.add(
         Particle(
           x: x,
           y: y,
           vx: math.cos(angle) * speed,
-          vy: math.sin(angle) * speed - 0.5,
-          life: 45,
+          vy: math.sin(angle) * speed - GameConfig.effects.particleGravity,
+          life: GameConfig.effects.particleLifespanFrames,
           color: Color(0xFF2E7D32),
         ),
       );
@@ -562,46 +522,35 @@ class GameState {
     int successRate = getSuccessRate();
     int waitingCars = getWaitingCarsCount();
 
-    if (totalCarsPassed >= 20 && !objectivesCompleted['pass_20_cars']!) {
-      objectives['pass_20_cars'] = true;
-      objectivesCompleted['pass_20_cars'] = true;
-      _awardObjectiveBonus('Pass 20 Cars', 50);
-    }
-
-    if (totalCarsPassed >= 10 &&
-        totalCarsCrashed == 0 &&
-        !objectivesCompleted['zero_crashes']!) {
-      objectives['zero_crashes'] = true;
-      objectivesCompleted['zero_crashes'] = true;
-      _awardObjectiveBonus('Perfect Safety', 100);
-    }
-
-    if (totalCarsPassed >= 50 && !objectivesCompleted['pass_50_cars']!) {
-      objectives['pass_50_cars'] = true;
-      objectivesCompleted['pass_50_cars'] = true;
-      _awardObjectiveBonus('Pass 50 Cars', 150);
-    }
-
-    if (totalCarsPassed >= 20 &&
-        successRate >= 85 &&
-        !objectivesCompleted['efficiency_85']!) {
-      objectives['efficiency_85'] = true;
-      objectivesCompleted['efficiency_85'] = true;
-      _awardObjectiveBonus('High Efficiency', 200);
-    }
-
-    if (totalCarsPassed >= 100 && !objectivesCompleted['pass_100_cars']!) {
-      objectives['pass_100_cars'] = true;
-      objectivesCompleted['pass_100_cars'] = true;
-      _awardObjectiveBonus('Century Mark', 300);
-    }
-
-    if (totalCarsPassed >= 30 &&
-        waitingCars <= 3 &&
-        !objectivesCompleted['no_traffic_jams']!) {
-      objectives['no_traffic_jams'] = true;
-      objectivesCompleted['no_traffic_jams'] = true;
-      _awardObjectiveBonus('Traffic Master', 250);
+    // Check each objective using GameConfig definitions
+    for (String objectiveId in GameConfig.objectives.definitions.keys) {
+      if (!objectivesCompleted[objectiveId]!) {
+        ObjectiveDefinition def = GameConfig.objectives.definitions[objectiveId]!;
+        bool requirementMet = false;
+        
+        switch (def.type) {
+          case ObjectiveType.carsPassed:
+            requirementMet = totalCarsPassed >= def.requirement;
+            break;
+          case ObjectiveType.perfectSafety:
+            requirementMet = totalCarsPassed >= def.requirement && totalCarsCrashed == 0;
+            break;
+          case ObjectiveType.efficiency:
+            requirementMet = totalCarsPassed >= def.requirement && 
+                           successRate >= (def.secondaryRequirement ?? 0);
+            break;
+          case ObjectiveType.trafficManagement:
+            requirementMet = totalCarsPassed >= def.requirement && 
+                           waitingCars <= (def.secondaryRequirement ?? 0);
+            break;
+        }
+        
+        if (requirementMet) {
+          objectives[objectiveId] = true;
+          objectivesCompleted[objectiveId] = true;
+          _awardObjectiveBonus(def.title, def.bonus);
+        }
+      }
     }
   }
 
@@ -618,12 +567,10 @@ class GameState {
     scorePopups.add(
       ScorePopup(
         x: gameWidth / 2,
-        y: gameHeight / 2 - 50,
+        y: gameHeight / 2 - GameConfig.effects.successPopupOffset,
         text: '$objectiveName: +$bonus',
-        timer: 180,
-        color: Color(
-          0xFF4CAF50,
-        ), // Green for achievements to distinguish from regular scores
+        timer: GameConfig.effects.achievementPopupDurationFrames,
+        color: GameConfig.objectives.achievementColor,
       ),
     );
   }
@@ -634,7 +581,7 @@ class GameState {
     int waitingCars = getWaitingCarsCount();
     int successRate = getSuccessRate();
 
-    if (waitingCars >= 7) {
+    if (waitingCars >= GameConfig.gameOver.maxWaitingCars) {
       isGameOver = true;
       gameOverReason = 'Too many cars waiting! ($waitingCars cars)';
       _trackGameOverAnalytics('traffic_jam');
@@ -642,7 +589,8 @@ class GameState {
       return;
     }
 
-    if (successRate < 70 && totalCarsCrashed > 5) {
+    if (successRate < GameConfig.gameOver.minSuccessRate && 
+        totalCarsCrashed > GameConfig.gameOver.minCrashesForPerformanceCheck) {
       isGameOver = true;
       gameOverReason =
           'Poor performance! ($successRate% success, $totalCarsCrashed crashes)';
@@ -666,7 +614,7 @@ class GameState {
       // Update existing cars' speed
       for (Car car in cars) {
         if (!car.crashed) {
-          car.speed = difficultySettings[newDifficulty]!.carSpeed;
+          car.speed = GameConfig.difficulties[newDifficulty]!.carSpeed;
         }
       }
     }
@@ -741,16 +689,16 @@ class GameState {
   }
 
   Color getDifficultyColor() {
-    return difficultySettings[currentDifficulty]!.color;
+    return GameConfig.difficulties[currentDifficulty]!.color;
   }
 
   double getDifficultyMultiplier() {
-    return difficultySettings[currentDifficulty]!.scoreMultiplier;
+    return GameConfig.difficulties[currentDifficulty]!.scoreMultiplier;
   }
 
   // Analytics helper methods
   void _checkScoreMilestones(int oldScore, int newScore) {
-    List<int> milestones = [100, 250, 500, 1000, 2000, 5000, 10000];
+    List<int> milestones = GameConfig.gameOver.scoreMilestones;
 
     for (int milestone in milestones) {
       if (oldScore < milestone && newScore >= milestone) {
@@ -824,7 +772,7 @@ class Car {
         gameState,
         intersectionEdge,
       );
-      if (distanceToIntersection <= 30) {
+      if (distanceToIntersection <= GameConfig.physics.stopDistanceFromIntersection) {
         shouldStop = true;
       }
     }
@@ -838,7 +786,7 @@ class Car {
         double deltaY = y - carAhead.y;
         double distanceSquared = deltaX * deltaX + deltaY * deltaY;
         double largerSize = math.max(getSize(), carAhead.getSize());
-        double safeDistance = largerSize * 1.5;
+        double safeDistance = largerSize * GameConfig.physics.safeFollowingDistanceMultiplier;
         double safeDistanceSquared = safeDistance * safeDistance;
         if (distanceSquared < safeDistanceSquared) {
           shouldStop = true;
@@ -968,7 +916,7 @@ class Car {
 
         if (isAhead &&
             distance > 0 &&
-            distance < 200 &&
+            distance < GameConfig.physics.maxCarSearchDistance &&
             distance < closestDistance) {
           closestCar = otherCar;
           closestDistance = distance;
@@ -980,23 +928,12 @@ class Car {
   }
 
   bool isOffScreen(double gameWidth, double gameHeight) {
-    return x < -50 || x > gameWidth + 50 || y < -50 || y > gameHeight + 50;
+    double buffer = GameConfig.physics.offScreenBuffer;
+    return x < -buffer || x > gameWidth + buffer || y < -buffer || y > gameHeight + buffer;
   }
 
   double getSize() {
-    switch (type) {
-      case CarType.ambulance:
-        return 24;
-      case CarType.police:
-        return 22;
-      case CarType.tractor:
-        return 18;
-      case CarType.schoolBus:
-        return 84;
-      case CarType.impatient:
-      case CarType.regular:
-        return 20;
-    }
+    return GameConfig.carProperties[type]!.size;
   }
 
   double getRotationAngle() {
@@ -1011,20 +948,6 @@ class Car {
         return math.pi / 2;
     }
   }
-}
-
-class DifficultySettings {
-  final int carSpawnInterval;
-  final double carSpeed;
-  final double scoreMultiplier;
-  final Color color;
-
-  DifficultySettings(
-    this.carSpawnInterval,
-    this.carSpeed,
-    this.scoreMultiplier,
-    this.color,
-  );
 }
 
 class ScorePopup {
@@ -1071,7 +994,7 @@ class Particle {
   void update() {
     x += vx;
     y += vy;
-    vy += 0.05; // Gravity
+    vy += GameConfig.effects.particleGravity; // Gravity
     life--;
   }
 }

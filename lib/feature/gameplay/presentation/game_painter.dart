@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../config/game_config.dart';
 import '../domain/game_state.dart';
 
 class GamePainter extends CustomPainter {
@@ -417,7 +418,7 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawTrafficLights(Canvas canvas, Size size) {
-    double lightDistance = 120;
+    double lightDistance = GameConfig.physics.trafficLightDistance;
 
     _drawTrafficLight(
       canvas,
