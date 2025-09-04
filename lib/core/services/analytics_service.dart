@@ -2,10 +2,34 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import '../util/helper.dart';
+
+/// Firebase Analytics service with release-only tracking
+/// 
+/// Only RELEASE builds send events to Firebase Analytics.
+/// DEBUG and PROFILE builds only log to console to prevent test data pollution.
+/// 
+/// This ensures clean production analytics data.
 class AnalyticsService {
   static FirebaseAnalytics? _analytics;
+  
+  /// Whether analytics collection is enabled (only in release mode)
+  static bool get isAnalyticsEnabled => kReleaseMode;
+  
+  /// Get current analytics status for debugging
+  static String get analyticsStatus {
+    if (kReleaseMode) {
+      return analytics != null ? 'Release Mode: Analytics enabled and active' : 'Release Mode: Analytics unavailable';
+    }
+    return 'Debug/Profile Mode: Analytics disabled (events logged to console only)';
+  }
 
   static FirebaseAnalytics? get analytics {
+    // Only enable analytics in release mode to avoid polluting production data
+    if (!kReleaseMode) {
+      return null;
+    }
+    
     if (_analytics == null) {
       try {
         // Check if Firebase is initialized
@@ -26,19 +50,21 @@ class AnalyticsService {
     String name, [
     Map<String, Object>? parameters,
   ]) async {
+    // Only send to Firebase in release mode - debug/profile log to console
+    if (!kReleaseMode) {
+      devPrint('🔍 [${kDebugMode ? 'DEBUG' : 'PROFILE'}] Analytics Event: $name ${parameters != null ? 'with params: $parameters' : '(no params)'}');
+      return;
+    }
+    
+    // In release mode, send to Firebase Analytics
     try {
       final analyticsInstance = analytics;
       if (analyticsInstance != null) {
         await analyticsInstance.logEvent(name: name, parameters: parameters);
-      } else if (kDebugMode) {
-        print(
-          'Analytics not available - would log: $name with params: $parameters',
-        );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to log analytics event $name: $e');
-      }
+      // Silently fail in release mode to avoid crashes
+      // Consider using a crash reporting service here in production
     }
   }
 

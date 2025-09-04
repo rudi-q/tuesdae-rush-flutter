@@ -3,7 +3,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../config/game_config.dart';
 import '../domain/game_state.dart';
+import '../domain/types.dart';
 
 class GamePainter extends CustomPainter {
   final GameState gameState;
@@ -417,7 +419,7 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawTrafficLights(Canvas canvas, Size size) {
-    double lightDistance = 120;
+    double lightDistance = GameConfig.physics.trafficLightDistance;
 
     _drawTrafficLight(
       canvas,
@@ -648,7 +650,7 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawAmbulanceEffects(Canvas canvas, double carWidth, double carHeight) {
-    double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    double time = GameTimer.time;
 
     // Flashing lights
     double redAlpha = 0.8 + 0.2 * math.sin(time * 8);
@@ -684,7 +686,7 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawPoliceEffects(Canvas canvas, double carWidth, double carHeight) {
-    double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    double time = GameTimer.time;
 
     // Faster flashing lights
     double redAlpha = 0.9 + 0.1 * math.sin(time * 12);
@@ -768,7 +770,7 @@ class GamePainter extends CustomPainter {
     );
 
     // Smoky exhaust
-    double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    double time = GameTimer.time;
     double smokeAlpha = 0.3 + 0.2 * math.sin(time * 2);
 
     final smokePaint =
@@ -794,7 +796,7 @@ class GamePainter extends CustomPainter {
   }
 
   void _drawSchoolBusEffects(Canvas canvas, double carWidth, double carHeight) {
-    double time = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    double time = GameTimer.time;
     double busHalfLength = carHeight / 2;
 
     // Black stripes
@@ -1037,7 +1039,13 @@ class GamePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(GamePainter oldDelegate) {
+    // Only repaint if game state has meaningfully changed
+    return gameState.cars.length != oldDelegate.gameState.cars.length ||
+           gameState.particles.length != oldDelegate.gameState.particles.length ||
+           gameState.scorePopups.length != oldDelegate.gameState.scorePopups.length ||
+           gameState.crashEffects.length != oldDelegate.gameState.crashEffects.length;
+  }
 }
 
 class TreeData {
