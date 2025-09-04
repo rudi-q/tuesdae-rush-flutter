@@ -8,6 +8,15 @@ import '../../audio/audio_manager.dart';
 import '../../responsiveness/mobile_manager.dart';
 import '../../save-score/score_service.dart';
 
+// GameTimer class to replace expensive DateTime.now() calls
+class GameTimer {
+  static int _frameCount = 0;
+  static double get time => _frameCount * 0.016667; // 60 FPS (1/60 seconds per frame)
+  static void update() => _frameCount++;
+  static void reset() => _frameCount = 0;
+}
+
+
 enum Direction { north, south, east, west }
 
 enum LightState { red, green }
@@ -158,6 +167,9 @@ class GameState {
 
   void update() {
     if (isPaused || isGameOver || !gameStarted) return;
+    
+    // Update frame-based timer
+    GameTimer.update();
 
     // Update cars
     for (int i = cars.length - 1; i >= 0; i--) {
@@ -399,15 +411,17 @@ class GameState {
             (car2.type == CarType.police || car2.type == CarType.ambulance);
         if (car1Emergency && car2Emergency) continue;
 
-        double distance = math.sqrt(
-          math.pow(car1.x - car2.x, 2) + math.pow(car1.y - car2.y, 2),
-        );
+        // Use squared distance to avoid expensive sqrt() calculation
+        double deltaX = car1.x - car2.x;
+        double deltaY = car1.y - car2.y;
+        double distanceSquared = deltaX * deltaX + deltaY * deltaY;
 
         double car1Radius = car1.getSize() / 2;
         double car2Radius = car2.getSize() / 2;
         double collisionThreshold = car1Radius + car2Radius;
+        double thresholdSquared = collisionThreshold * collisionThreshold;
 
-        if (distance < collisionThreshold) {
+        if (distanceSquared < thresholdSquared) {
           bool car1Vertical =
               (car1.from == Direction.north || car1.from == Direction.south);
           bool car2Vertical =
@@ -795,6 +809,9 @@ class Car {
   });
 
   void update(GameState gameState) {
+    // Early returns to avoid unnecessary calculations
+    if (crashed && removalTimer != null) return; // Don't update crashed cars waiting for removal
+    
     double intersectionEdge = _getIntersectionEdge(gameState);
     bool shouldStop = false;
 
@@ -816,12 +833,14 @@ class Car {
     if (!shouldStop && !crashed && type != CarType.police) {
       Car? carAhead = _getCarAhead(gameState);
       if (carAhead != null) {
-        double distance = math.sqrt(
-          math.pow(x - carAhead.x, 2) + math.pow(y - carAhead.y, 2),
-        );
+        // Use squared distance to avoid expensive sqrt()
+        double deltaX = x - carAhead.x;
+        double deltaY = y - carAhead.y;
+        double distanceSquared = deltaX * deltaX + deltaY * deltaY;
         double largerSize = math.max(getSize(), carAhead.getSize());
         double safeDistance = largerSize * 1.5;
-        if (distance < safeDistance) {
+        double safeDistanceSquared = safeDistance * safeDistance;
+        if (distanceSquared < safeDistanceSquared) {
           shouldStop = true;
         }
       }

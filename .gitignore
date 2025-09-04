@@ -60,5 +60,6 @@ app.*.map.json
 # Exclude setup and schema files
 *setup.md
 *SETUP.md
+W*.md
 *schema.sql
 *SCHEMA.sql
