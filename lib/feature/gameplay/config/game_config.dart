@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../domain/types.dart';
 import 'data_class_config.dart';
 

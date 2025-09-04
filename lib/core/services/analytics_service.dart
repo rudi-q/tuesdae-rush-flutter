@@ -2,6 +2,8 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import '../util/helper.dart';
+
 /// Firebase Analytics service with release-only tracking
 /// 
 /// Only RELEASE builds send events to Firebase Analytics.
@@ -50,7 +52,7 @@ class AnalyticsService {
   ]) async {
     // Only send to Firebase in release mode - debug/profile log to console
     if (!kReleaseMode) {
-      print('🔍 [${kDebugMode ? 'DEBUG' : 'PROFILE'}] Analytics Event: $name ${parameters != null ? 'with params: $parameters' : '(no params)'}');
+      devPrint('🔍 [${kDebugMode ? 'DEBUG' : 'PROFILE'}] Analytics Event: $name ${parameters != null ? 'with params: $parameters' : '(no params)'}');
       return;
     }
     

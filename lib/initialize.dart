@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/services/firebase_options.dart';
 import 'core/services/supabase_config.dart';
+import 'core/util/helper.dart';
 import 'feature/gameplay/config/game_config.dart';
 import 'feature/gameplay/domain/types.dart';
 
@@ -25,14 +26,14 @@ Future<void> initializeApp() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     if (kDebugMode) {
-      print('Firebase initialized successfully');
-      print('📊 Analytics Status: ${kReleaseMode ? "ENABLED for production" : "DISABLED in debug/profile mode"}');
+      devPrint('Firebase initialized successfully');
+      devPrint('📊 Analytics Status: ${kReleaseMode ? "ENABLED for production" : "DISABLED in debug/profile mode"}');
     }
   } catch (e) {
     if (kDebugMode) {
-      print('Firebase initialization failed: $e');
-      print('Continuing without Firebase for development');
-      print('📊 Analytics Status: UNAVAILABLE due to Firebase init failure');
+      devPrint('Firebase initialization failed: $e');
+      devPrint('Continuing without Firebase for development');
+      devPrint('📊 Analytics Status: UNAVAILABLE due to Firebase init failure');
     }
   }
 
@@ -43,12 +44,12 @@ Future<void> initializeApp() async {
       anonKey: SupabaseConfig.supabaseAnonKey,
     );
     if (kDebugMode) {
-      print('Supabase initialized successfully');
+      devPrint('Supabase initialized successfully');
     }
   } catch (e) {
     if (kDebugMode) {
-      print('Supabase initialization failed: $e');
-      print('Continuing without Supabase for development');
+      devPrint('Supabase initialization failed: $e');
+      devPrint('Continuing without Supabase for development');
     }
   }
 }
@@ -56,7 +57,7 @@ Future<void> initializeApp() async {
 /// Validates GameConfig to ensure all configurations are valid
 void _validateGameConfig() {
   if (kDebugMode) {
-    print('Validating GameConfig...');
+    devPrint('Validating GameConfig...');
   }
   
   // Validate car type distribution
@@ -125,7 +126,7 @@ void _validateGameConfig() {
   }
   
   if (kDebugMode) {
-    print('GameConfig validation passed! ✓');
+    devPrint('GameConfig validation passed! ✓');
   }
 }
 
@@ -134,7 +135,7 @@ void _validateGameConfigSafe() {
   try {
     // Validate car type distribution
     if (!GameConfig.validateCarDistribution()) {
-      print('⚠️ WARNING: Car type distribution does not sum to 1.0 - using safe defaults');
+      devPrint('⚠️ WARNING: Car type distribution does not sum to 1.0 - using safe defaults');
       return;
     }
     
@@ -143,7 +144,7 @@ void _validateGameConfigSafe() {
       try {
         GameConfig.getDifficulty(difficulty);
       } catch (e) {
-        print('⚠️ WARNING: Missing difficulty configuration for $difficulty - using defaults');
+        devPrint('⚠️ WARNING: Missing difficulty configuration for $difficulty - using defaults');
         return;
       }
     }
@@ -153,30 +154,30 @@ void _validateGameConfigSafe() {
       try {
         GameConfig.getCarConfig(carType);
       } catch (e) {
-        print('⚠️ WARNING: Missing car configuration for $carType - using defaults');
+        devPrint('⚠️ WARNING: Missing car configuration for $carType - using defaults');
         return;
       }
     }
     
     // Validate objectives configuration
     if (GameConfig.objectives.definitions.isEmpty) {
-      print('⚠️ WARNING: No objectives defined - using empty objectives');
+      devPrint('⚠️ WARNING: No objectives defined - using empty objectives');
       return;
     }
     
     // Validate positive values for critical game mechanics
     if (GameConfig.gameOver.maxWaitingCars <= 0) {
-      print('⚠️ WARNING: maxWaitingCars must be positive - using default 7');
+      devPrint('⚠️ WARNING: maxWaitingCars must be positive - using default 7');
       return;
     }
     
     if (GameConfig.gameOver.minSuccessRate < 0 || GameConfig.gameOver.minSuccessRate > 100) {
-      print('⚠️ WARNING: minSuccessRate must be between 0-100 - using default 70');
+      devPrint('⚠️ WARNING: minSuccessRate must be between 0-100 - using default 70');
       return;
     }
     
     if (GameConfig.timing.frameTimeSeconds <= 0) {
-      print('⚠️ WARNING: frameTimeSeconds must be positive - using default 0.016667');
+      devPrint('⚠️ WARNING: frameTimeSeconds must be positive - using default 0.016667');
       return;
     }
     
@@ -184,14 +185,14 @@ void _validateGameConfigSafe() {
     if (GameConfig.physics.stopDistanceFromIntersection <= 0 ||
         GameConfig.physics.safeFollowingDistanceMultiplier <= 0 ||
         GameConfig.physics.offScreenBuffer <= 0) {
-      print('⚠️ WARNING: Physics constants must be positive - using safe defaults');
+      devPrint('⚠️ WARNING: Physics constants must be positive - using safe defaults');
       return;
     }
     
     // If we get here, validation passed
-    print('✅ GameConfig validation passed in release mode');
+    devPrint('✅ GameConfig validation passed in release mode');
   } catch (e) {
-    print('⚠️ WARNING: GameConfig validation failed in release mode: $e');
-    print('🔧 Continuing with default configuration...');
+    devPrint('⚠️ WARNING: GameConfig validation failed in release mode: $e');
+    devPrint('🔧 Continuing with default configuration...');
   }
 }
