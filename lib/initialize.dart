@@ -18,11 +18,13 @@ Future<void> initializeApp() async {
     );
     if (kDebugMode) {
       print('Firebase initialized successfully');
+      print('📊 Analytics Status: ${kDebugMode ? "DISABLED in debug mode" : "ENABLED for production"}');
     }
   } catch (e) {
     if (kDebugMode) {
       print('Firebase initialization failed: $e');
       print('Continuing without Firebase for development');
+      print('📊 Analytics Status: UNAVAILABLE due to Firebase init failure');
     }
   }
 
